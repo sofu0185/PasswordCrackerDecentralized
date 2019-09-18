@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Slave
 {
@@ -14,11 +15,13 @@ namespace Slave
         
         static void Main(string[] args)
         {
+            Cracking cracking = new Cracking();
+
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
 
             using (NetworkStream ns = clientSocket.GetStream())
             {
-                Task<string> crackingTask = null;
+                Task<ValueTuple<bool, string>> crackingTask = null;
 
                 
 
@@ -33,14 +36,14 @@ namespace Slave
                         CancellationToken cct = crackingTokenSource.Token;
                         using (StreamReader sr = new StreamReader(ns))
                         {
-                            string hashedPassword;
-                            List<string> dicChunk;
+                            string hashedPassword = null;
+                            List<string> dicChunk = null;
                             try
                             {
                                 hashedPassword = sr.ReadLine();
-
                                 string allWords = sr.ReadLine();
-                                dicChunk = new List<string>(allWords.Split(','));
+
+                                dicChunk = allWords.Split(',').ToList();
                             }
                             catch (IOException e)
                             {
@@ -49,10 +52,7 @@ namespace Slave
                             }
 
                             // Can return success or newChunk
-                            crackingTask = Task<string>.Run(() => {
-                                return "";
-
-                            }, cct);
+                            crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
 
                             string extraMessage = sr.ReadLine();
                             if (extraMessage == "password")
@@ -69,16 +69,16 @@ namespace Slave
                     {
                         using (StreamWriter sw = new StreamWriter(ns))
                         {
-                            switch (crackingTask.Result)
+                            sw.AutoFlush = true;
+                            if (crackingTask.Result.Item1)
                             {
-                                case "success":
-                                    sw.WriteLine("password");
-                                    break;
-                                case "newChunk":
-                                    sw.WriteLine("chunck");
-                                    break;
+                                sw.WriteLine("passwd");
+                                sw.WriteLine(crackingTask.Result.Item2);
                             }
-                            sw.Flush();
+                            else if(crackingTask.Result.Item1)
+                            {
+                                sw.WriteLine("Chunk");
+                            }
                         }                        
                     }
                 }
