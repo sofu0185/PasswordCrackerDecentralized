@@ -10,6 +10,7 @@ namespace Master
     {
         private List<String> _fullList = new List<string>();
         public List<List<string>> ChunkList;
+        public List<string> chunks;
         private int index = 0;
         private int chunkSize = 50000;
         public int nextChunk = 0;
@@ -18,35 +19,47 @@ namespace Master
         {
             _fullList = FileHandler.ReadAllWordsInDictionary();
             SplitChunks();
-        }
-
-        public string ChunkToString()
-        {
-            List<string> chunk = GetNextChunk();
-            string s = "";
-            foreach (string line in chunk)
+            chunks = new List<string>();
+            foreach (var chunk in ChunkList)
             {
-                s += "," + line;
+                string s = "";
+                foreach (var str in chunk)
+                {
+                    s += "," + str;
+                }
+                chunks.Add(s);
             }
 
-            return s;
+            Console.WriteLine("Chunks ready");
         }
+
+        //public string ChunkToString()
+        //{
+        //    List<string> chunk = GetNextChunk();
+        //    string s = "";
+        //    foreach (string line in chunk)
+        //    {
+        //        s += "," + line;
+        //    }
+
+        //    return s;
+        //}
 
         public void ResetCount()
         {
             nextChunk = 0;
 
         }
-        public List<string> GetNextChunk()
+        public string GetNextChunk()
         {
-            if (nextChunk == ChunkList.Count)
+            if (nextChunk == chunks.Count)
             {
                 nextChunk = 0;
             }
 
             int i = nextChunk;
             nextChunk++;
-            return ChunkList[i];
+            return chunks[i];
         }
 
         /// <summary>Returns a list with chunks (a list consisting of strings)  
