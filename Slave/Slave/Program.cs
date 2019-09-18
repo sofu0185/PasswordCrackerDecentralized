@@ -50,7 +50,7 @@ namespace Slave
                             throw e;
                     }
 
-                    Console.WriteLine($"Chunk and hashed password recived:\n\t");
+                    Console.Write($"Chunk and hashed password recived:\n\t");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.WriteLine(hashedPassword);
                     Console.ForegroundColor = ConsoleColor.White;
@@ -82,7 +82,7 @@ namespace Slave
                         {
                             sw.WriteLine("passwd");
                             sw.WriteLine(crackingTask.Result.Item2);
-                            Console.WriteLine($"\t{crackingTask.Result.Item2}");
+                            Console.WriteLine($"\tPassword cracked: {crackingTask.Result.Item2}");
                         }
                         else
                         {
