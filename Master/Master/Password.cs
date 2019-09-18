@@ -16,7 +16,7 @@ namespace Master
 
         public void GetFullList()
         {
-            using (FileStream _fs = new FileStream("../../../../../passwords.txt", FileMode.Open, FileAccess.Read))
+            using (FileStream _fs = new FileStream("Text files/passwords.txt", FileMode.Open, FileAccess.Read))
             {
                 _list = new List<string>();
                 StreamReader stReader = new StreamReader(_fs);
