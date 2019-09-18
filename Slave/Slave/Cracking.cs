@@ -15,6 +15,8 @@ namespace Slave
         /// </summary>
         private readonly HashAlgorithm _messageDigest;
 
+        private static readonly Converter<char, byte> Converter = CharToByte;
+
         public Cracking()
         {
             _messageDigest = new SHA1CryptoServiceProvider();
@@ -112,7 +114,7 @@ namespace Slave
         private IEnumerable<UserInfoClearText> CheckSingleWord(IEnumerable<UserInfo> userInfos, String possiblePassword)
         {
             char[] charArray = possiblePassword.ToCharArray();
-            byte[] passwordAsBytes = null;//Array.ConvertAll(charArray, PasswordFileHandler.GetConverter());
+            byte[] passwordAsBytes = Array.ConvertAll(charArray, Converter);
 
             //HASH VALUE
             byte[] encryptedPassword = _messageDigest.ComputeHash(passwordAsBytes);
@@ -159,6 +161,17 @@ namespace Slave
                     return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Converting a char to a byte can be done in many ways.
+        /// This is one way ...
+        /// </summary>
+        /// <param name="ch"></param>
+        /// <returns></returns>
+        private static byte CharToByte(char ch)
+        {
+            return Convert.ToByte(ch);
         }
     }
 }
