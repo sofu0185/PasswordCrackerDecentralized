@@ -52,7 +52,7 @@ namespace Master
         {
             ChunkList = new List<List<string>>();
 
-            for (int x = 0; x < fullList.Count / chunkSize; x++)
+            while (index < fullList.Count)
             {
                 //Ny chunk
                 List<String> chunk = new List<String>();

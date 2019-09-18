@@ -19,8 +19,8 @@ namespace Master
         private static Stopwatch stopwatch = new Stopwatch();
         public static void HandShake(TcpClient client)
         {
-            stopwatch.Start();
             NetworkStream networkStream = client.GetStream();
+            stopwatch.Start();
             StreamReader streamReader = new StreamReader(networkStream);
             StreamWriter streamWriter = new StreamWriter(networkStream);
             streamWriter.AutoFlush = true;
@@ -33,7 +33,10 @@ namespace Master
         {
             return Task.Run((() =>
                              {
-                                 SendNext(c);
+                                 lock (dict)
+                                 {
+                                     SendNext(c);
+                                 }
                                  while (true)
                                  {
                                      string s = c.StreamReader.ReadLine();
@@ -51,12 +54,19 @@ namespace Master
                                              Console.WriteLine(stopwatch.Elapsed);
                                              Console.ReadLine();
                                          }
-                                         SendNext(c);
-                                         Chat(index);
+                                         Console.WriteLine(stopwatch.Elapsed);
+                                         lock (dict)
+                                         {
+                                             SendNext(c);
+                                         }
+                                         //Chat(index);
                                      }
                                      else if (s == "Chunk")
                                      {
-                                         SendNext(c);
+                                         lock (dict)
+                                         {
+                                             SendNext(c);
+                                         }
                                      }
                                  }
                              }));
