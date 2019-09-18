@@ -10,39 +10,38 @@ namespace Master
 
     public static class ChatRoom
     {
-        private static Dictionary<string, Client> _Clients     = new Dictionary<string, Client>();
+        private static Dictionary<int, Client> _Clients     = new Dictionary<int, Client>();
         private static List<Task>                 monitorTasks = new List<Task>();
+        private static int _index = 1;
         public static void HandShake(TcpClient client)
         {
             NetworkStream networkStream = client.GetStream();
             StreamReader streamReader = new StreamReader(networkStream);
             StreamWriter streamWriter = new StreamWriter(networkStream);
             streamWriter.AutoFlush = true;
-            streamWriter.WriteLine("Input name");
-            string name = streamReader.ReadLine();
-            _Clients.Add(name, new Client(client, networkStream, streamWriter, streamReader));
-            monitorTasks.Add(MonitorTask(_Clients[name], name));
+            _Clients.Add(_index, new Client(client, networkStream, streamWriter, streamReader));
+            monitorTasks.Add(MonitorTask(_Clients[_index], _index));
         }
 
-        public static Task MonitorTask(Client c, string name)
+        public static Task MonitorTask(Client c, int index)
         {
             return Task.Run((() =>
                              {
                                  while (true)
                                  {
                                      string s = c.StreamReader.ReadLine();
-                                     Chat(name, s);
+                                     Chat(_index, s);
                                  }
                              }));
         }
 
-        public static void Chat(string name, string message)
+        public static void Chat(int index, string message)
         {
             foreach (var client in _Clients)
             {
-                if (name != client.Key)
+                if (index != client.Key)
                 {
-                    client.Value.StreamWriter.WriteLine($"{name}: {message}");
+                    client.Value.StreamWriter.WriteLine($"{index}: {message}");
                 }
             }
         }
