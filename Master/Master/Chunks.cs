@@ -12,7 +12,7 @@ namespace Master
         public List<List<string>> ChunkList;
         public List<string> chunks;
         private int index = 0;
-        private int chunkSize = 50000;
+        private int chunkSize = 25000;
         public int nextChunk = 0;
 
         public Chunks()
