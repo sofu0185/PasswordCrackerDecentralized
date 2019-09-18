@@ -7,24 +7,24 @@ namespace Master
 {
     class TempTest
     {
-        public void TestOutputAllChunks()
-        {
-            Dictionary dic = new Dictionary();
-            var list = dic.SplitChunks();
+        //public void TestOutputAllChunks()
+        //{
+        //    Dictionary dic = new Dictionary();
+        //    var list = dic.SplitChunks();
 
-            foreach (var VARIABLE in list)
-            {
-                int index = 0;
-                foreach (var V in VARIABLE)
-                {
-                    Console.WriteLine(V);
-                    index++;
-                }
-                Console.WriteLine(index);
-                Console.WriteLine("Chunk udført! Fortsætter næste chunk:");
-                Thread.Sleep(2000);
-            }
-            Console.WriteLine("Færdig med alle chunks!");
-        }
+        //    foreach (var VARIABLE in list)
+        //    {
+        //        int index = 0;
+        //        foreach (var V in VARIABLE)
+        //        {
+        //            Console.WriteLine(V);
+        //            index++;
+        //        }
+        //        Console.WriteLine(index);
+        //        Console.WriteLine("Chunk udført! Fortsætter næste chunk:");
+        //        Thread.Sleep(2000);
+        //    }
+        //    Console.WriteLine("Færdig med alle chunks!");
+        //}
     }
 }

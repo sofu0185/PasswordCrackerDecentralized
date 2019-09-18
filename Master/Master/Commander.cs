@@ -37,7 +37,6 @@ namespace Master
                                      {
                                          Console.WriteLine(s);
                                          SendNext(c);
-                                         //Chat(index, s);
                                      }
                                      else if (s == "Chunk")
                                      {
