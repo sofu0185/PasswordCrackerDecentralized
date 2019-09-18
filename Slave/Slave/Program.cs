@@ -29,9 +29,6 @@ namespace Slave
 
                 while (clientSocket.Connected)
                 {
-                    //CancellationTokenSource tcpTokenSource = new CancellationTokenSource();
-                    //CancellationToken tct = tcpTokenSource.Token;
-
                     CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
                     CancellationToken cct = crackingTokenSource.Token;
                     
