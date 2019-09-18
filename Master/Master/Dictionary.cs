@@ -36,7 +36,7 @@ namespace Master
 
         public List<string> GetNextChunk()
         {
-            if (nextChunk == ChunkList.Count)
+            if (nextChunk > ChunkList.Count)
             {
                 nextChunk = 0;
             }
@@ -67,6 +67,14 @@ namespace Master
                 }
                 ChunkList.Add(chunk);
             }
+
+            int o = 0;
+            foreach (var ll in ChunkList)
+            {
+                o += ll.Count;
+            }
+
+            Console.WriteLine(o);
         }
 
         public void GetFullList()

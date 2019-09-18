@@ -15,8 +15,9 @@ namespace Master
         private static Password pass = new Password();
         private static List<Task> monitorTasks = new List<Task>();
         private static int _index = 1;
-        private static Dictionary dict = new Dictionary();
         private static Stopwatch stopwatch = new Stopwatch();
+        private static Dictionary dict = new Dictionary();
+        
         public static void HandShake(TcpClient client)
         {
             NetworkStream networkStream = client.GetStream();
