@@ -10,6 +10,7 @@ namespace Master
         public void TestOutputAllChunks()
         {
             Dictionary dic = new Dictionary();
+            Password pass = new Password();
             var list = dic.SplitChunks();
 
             foreach (var VARIABLE in list)
@@ -22,6 +23,7 @@ namespace Master
                 }
                 Console.WriteLine(index);
                 Console.WriteLine("Chunk udført! Fortsætter næste chunk:");
+                Console.WriteLine(pass.GetNextPass());
                 Thread.Sleep(2000);
             }
             Console.WriteLine("Færdig med alle chunks!");
