@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
@@ -8,66 +9,84 @@ namespace Slave
 {
     class Program
     {
-
         public const int PORT = 0;
         public const string IPADDRESS = "";
         
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
 
-            NetworkStream ns = clientSocket.GetStream();
-
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-            CancellationToken ct = tokenSource.Token;
-
-            // Runs task on another thread
-            Task.Run(() =>
+            using (NetworkStream ns = clientSocket.GetStream())
             {
-                StreamWriter sw = new StreamWriter(ns);
-                while (true)
-                {
-                    sw.WriteLine(Console.ReadLine());
-                    if (ct.IsCancellationRequested)
-                        break;
-                    sw.Flush();
-                }
-            }, ct);
+                Task<string> crackingTask = null;
 
-            StreamReader sr = new StreamReader(ns);
-            string clientMessage = "";
-            while (clientSocket.Connected && clientMessage != "QUIT")
-            {
-                try
-                {
-                    clientMessage = sr.ReadLine();
+                
 
-                    int leftPositionCursor = Console.CursorLeft;
-                    if (leftPositionCursor > 0)
+                while (clientSocket.Connected)
+                {
+                    //CancellationTokenSource tcpTokenSource = new CancellationTokenSource();
+                    //CancellationToken tct = tcpTokenSource.Token;
+
+                    Task t = Task.Run(() =>
                     {
-                        int topPositionCursor = Console.CursorTop;
-                        Console.MoveBufferArea(0, topPositionCursor, leftPositionCursor, 1, 0, topPositionCursor + 1);
-                        Console.CursorLeft = 0;
-                    }
+                        CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
+                        CancellationToken cct = crackingTokenSource.Token;
+                        using (StreamReader sr = new StreamReader(ns))
+                        {
+                            string hashedPassword;
+                            List<string> dicChunk;
+                            try
+                            {
+                                hashedPassword = sr.ReadLine();
 
-                    Console.WriteLine(/*"Server says: " + */clientMessage);
-                    Console.CursorLeft = leftPositionCursor;
-                }
-                catch (IOException e)
-                {
-                    if (e.InnerException.GetType() != typeof(SocketException))
-                        throw e;
+                                string allWords = sr.ReadLine();
+                                dicChunk = new List<string>(allWords.Split(','));
+                            }
+                            catch (IOException e)
+                            {
+                                if (e.InnerException.GetType() != typeof(SocketException))
+                                    throw e;
+                            }
+
+                            // Can return success or newChunk
+                            crackingTask = Task<string>.Run(() => {
+                                return "";
+
+                            }, cct);
+
+                            string extraMessage = sr.ReadLine();
+                            if (extraMessage == "password")
+                            {
+                                crackingTokenSource.Cancel();
+                            }
+                        }
+                    });
+
+                    crackingTask.Wait();
+                    //tcpTokenSource.Cancel();
+
+                    if (crackingTask.IsCompletedSuccessfully)
+                    {
+                        using (StreamWriter sw = new StreamWriter(ns))
+                        {
+                            switch (crackingTask.Result)
+                            {
+                                case "success":
+                                    sw.WriteLine("password");
+                                    break;
+                                case "newChunk":
+                                    sw.WriteLine("chunck");
+                                    break;
+                            }
+                            sw.Flush();
+                        }                        
+                    }
                 }
             }
-
-            tokenSource.Cancel();
-            ns.Close();
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nConnection ended...");
-            Console.ForegroundColor = ConsoleColor.White;
         }
+
+        
+
+
     }
 }
