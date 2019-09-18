@@ -29,12 +29,17 @@ namespace Master
 
         public string GetPass()
         {
-            return _list[_currentPassIndex];
+            return _list[_currentPassIndex].Split(":")[1];
         }
 
         public void NextPass()
         {
             _currentPassIndex++;
+            if (_currentPassIndex == _list.Count)
+            {
+                Console.WriteLine("Lol vi er færdige");
+                Console.ReadLine();
+            }
         }
     }
 }
