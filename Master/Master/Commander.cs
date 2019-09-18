@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Master
@@ -15,8 +16,10 @@ namespace Master
         private static List<Task> monitorTasks = new List<Task>();
         private static int _index = 1;
         private static Dictionary dict = new Dictionary();
+        private static Stopwatch stopwatch = new Stopwatch();
         public static void HandShake(TcpClient client)
         {
+            stopwatch.Start();
             NetworkStream networkStream = client.GetStream();
             StreamReader streamReader = new StreamReader(networkStream);
             StreamWriter streamWriter = new StreamWriter(networkStream);
@@ -40,9 +43,14 @@ namespace Master
                                      }
                                      else if (s.Contains("passwd"))
                                      {
-                                         pass.NextPass();
                                          Console.WriteLine(s);
-                                         Console.WriteLine(c.StreamReader.ReadLine());
+                                         Console.WriteLine(pass.GetName() + ": " + c.StreamReader.ReadLine());
+                                         if (pass.NextPass())
+                                         {
+                                             stopwatch.Stop();
+                                             Console.WriteLine(stopwatch.Elapsed);
+                                             Console.ReadLine();
+                                         }
                                          SendNext(c);
                                          Chat(index);
                                      }

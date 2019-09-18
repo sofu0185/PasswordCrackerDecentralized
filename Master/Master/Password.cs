@@ -32,14 +32,20 @@ namespace Master
             return _list[_currentPassIndex].Split(":")[1];
         }
 
-        public void NextPass()
+        public string GetName()
+        {
+            return _list[_currentPassIndex].Split(":")[0];
+        }
+
+        public bool NextPass()
         {
             _currentPassIndex++;
             if (_currentPassIndex == _list.Count)
             {
-                Console.WriteLine("Lol vi er færdige");
-                Console.ReadLine();
+                return true;
             }
+
+            return false;
         }
     }
 }
