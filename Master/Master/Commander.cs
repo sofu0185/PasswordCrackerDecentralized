@@ -34,10 +34,9 @@ namespace Master
         {
             return Task.Run((() =>
                              {
-                                 lock (dict)
-                                 {
+                                 
                                      SendNext(c);
-                                 }
+                                 
                                  while (true)
                                  {
                                      string s = c.StreamReader.ReadLine();
@@ -56,18 +55,15 @@ namespace Master
                                              Console.ReadLine();
                                          }
                                          Console.WriteLine(stopwatch.Elapsed);
-                                         lock (dict)
-                                         {
+                                         
                                              dict.ResetCount();
                                              SendNext(c);
-                                         }
+                                         
                                          //Chat(index);
                                      }
                                      else if (s == "Chunk")
                                      {
-                                         lock (dict)
-                                         {
-                                             if (dict.nextChunk == dict.ChunkList.Count)
+                                         if (dict.nextChunk == dict.ChunkList.Count)
                                              {
                                                  Console.WriteLine("Pass not found");
                                                  if (pass.NextPass())
@@ -78,7 +74,7 @@ namespace Master
                                                  }
                                              }
                                              SendNext(c);
-                                         }
+                                         
                                      }
                                  }
                              }));

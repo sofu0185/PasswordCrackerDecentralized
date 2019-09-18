@@ -13,7 +13,7 @@ namespace Master
         private List<String> fullList = new List<string>();
         public List<List<string>> ChunkList;
         private int index = 0;
-        private int chunkSize = 10000;
+        private int chunkSize = 50000;
         public int nextChunk = 0;
 
         public Dictionary()
@@ -45,8 +45,10 @@ namespace Master
             {
                 nextChunk = 0;
             }
-            List<string> chunk = ChunkList[nextChunk];
+
+            int i = nextChunk;
             nextChunk++;
+            List<string> chunk = ChunkList[i];
             return chunk;
         }
 
@@ -79,7 +81,7 @@ namespace Master
             foreach(string s in fullList)
             {
                 //Ny chunk hvis ord i chunk er 10000
-                if (count == 10_000)
+                if (count == chunkSize)
                 {
                     ChunkList.Add(chunk);
                     chunk = new List<string>();
