@@ -30,40 +30,39 @@ namespace Slave
                     //CancellationTokenSource tcpTokenSource = new CancellationTokenSource();
                     //CancellationToken tct = tcpTokenSource.Token;
 
-                    Task t = Task.Run(() =>
+                    CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
+                    CancellationToken cct = crackingTokenSource.Token;
+                    using (StreamReader sr = new StreamReader(ns))
                     {
-                        CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
-                        CancellationToken cct = crackingTokenSource.Token;
-                        using (StreamReader sr = new StreamReader(ns))
+                        string hashedPassword = null;
+                        List<string> dicChunk = null;
+                        try
                         {
-                            string hashedPassword = null;
-                            List<string> dicChunk = null;
-                            try
-                            {
-                                hashedPassword = sr.ReadLine();
-                                string allWords = sr.ReadLine();
+                            hashedPassword = sr.ReadLine();
+                            string allWords = sr.ReadLine();
 
-                                dicChunk = allWords.Split(',').ToList();
-                            }
-                            catch (IOException e)
-                            {
-                                if (e.InnerException.GetType() != typeof(SocketException))
-                                    throw e;
-                            }
+                            dicChunk = allWords.Split(',').ToList();
+                        }
+                        catch (IOException e)
+                        {
+                            if (e.InnerException.GetType() != typeof(SocketException))
+                                throw e;
+                        }
 
-                            // Can return success or newChunk
-                            crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
-
+                        // Can return success or newChunk
+                        crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
+                        Task t = Task.Run(() =>
+                        {
                             string extraMessage = sr.ReadLine();
                             if (extraMessage == "password")
                             {
                                 crackingTokenSource.Cancel();
                             }
-                        }
-                    });
 
-                    crackingTask.Wait();
-                    //tcpTokenSource.Cancel();
+                        });
+                        crackingTask.Wait();
+                        //tcpTokenSource.Cancel();
+                    }
 
                     if (crackingTask.IsCompletedSuccessfully)
                     {
