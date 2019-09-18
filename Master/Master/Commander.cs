@@ -10,8 +10,9 @@ namespace Master
 
     public static class Commander
     {
-        private static Dictionary<int, Client> _Clients     = new Dictionary<int, Client>();
-        private static List<Task>                 monitorTasks = new List<Task>();
+        private static Dictionary<int, Client> _Clients = new Dictionary<int, Client>();
+        private static Password pass = new Password();
+        private static List<Task> monitorTasks = new List<Task>();
         private static int _index = 1;
         private static Dictionary dict = new Dictionary();
         public static void HandShake(TcpClient client)
@@ -35,6 +36,7 @@ namespace Master
                                      string s = c.StreamReader.ReadLine();
                                      if (s.Contains("passwd"))
                                      {
+                                         pass.NextPass();
                                          Console.WriteLine(s);
                                          SendNext(c);
                                      }
@@ -59,7 +61,8 @@ namespace Master
 
         public static void SendNext(Client c)
         {
-            c.StreamWriter.WriteLine("pass" + " " + dict.ChunkToString());
+            c.StreamWriter.WriteLine(pass.GetPass());
+            c.StreamWriter.WriteLine(dict.ChunkToString());
         }
     }
 }

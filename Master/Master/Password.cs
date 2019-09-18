@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Master
 {
@@ -25,22 +24,24 @@ namespace Master
             }
         }
 
-        public string GetNextPass()
+        public string GetPass()
         {
             List<String> list = GetFullList();
-            String pass = "";
+            return list[_currentPassIndex];
+        }
 
-            if (list.Count > _currentPassIndex)
+        public void NextPass()
+        {
+            List<String> list = GetFullList();
+
+            if (_currentPassIndex  == list.Count-1)
             {
-                pass = list[_currentPassIndex];
-                _currentPassIndex++;
-                return pass;
+                _currentPassIndex = 0;
             }
             else
             {
-                return "No more passwords";
+                _currentPassIndex++;
             }
-
         }
     }
 }
