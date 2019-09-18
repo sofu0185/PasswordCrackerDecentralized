@@ -9,7 +9,7 @@ namespace Master
     /// </summary>
     class Dictionary
     {
-        private FileStream _fs = new FileStream("../../../../../webster-dictionary.txt", FileMode.Open, FileAccess.Read);
+        private FileStream _fs = new FileStream("Text files/webster-dictionary.txt", FileMode.Open, FileAccess.Read);
         private List<String> fullList = new List<string>();
         private List<List<string>> ChunkList;
         private int index = 0;
