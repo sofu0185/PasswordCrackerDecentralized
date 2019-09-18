@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 
 namespace Master
 {
@@ -7,6 +8,12 @@ namespace Master
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
+            while (true)
+            {
+                TcpClient client = Server.AcceptClient().Result;
+                ChatRoom.HandShake(client);
+            }
         }
     }
 }
+
