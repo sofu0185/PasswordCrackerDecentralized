@@ -8,6 +8,9 @@ namespace Master
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
+            new TempTest().TestOutputAllChunks();
+            
+
             while (true)
             {
                 TcpClient client = Server.AcceptClient().Result;

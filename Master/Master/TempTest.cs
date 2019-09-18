@@ -22,7 +22,7 @@ namespace Master
                 }
                 Console.WriteLine(index);
                 Console.WriteLine("Chunk udført! Fortsætter næste chunk:");
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
             }
             Console.WriteLine("Færdig med alle chunks!");
         }
