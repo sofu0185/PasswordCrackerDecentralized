@@ -72,7 +72,7 @@ namespace Slave
 
                     if (crackingTask.IsCompletedSuccessfully)
                     {
-                        Console.WriteLine("Was password in chunk? ");
+                        Console.Write("Was password in chunk? ");
                         Console.ForegroundColor = crackingTask.Result.Item1 ? ConsoleColor.Green : ConsoleColor.Red;
                         Console.WriteLine($"{crackingTask.Result.Item1}");
                         Console.ForegroundColor = ConsoleColor.White;
