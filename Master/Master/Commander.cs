@@ -38,7 +38,9 @@ namespace Master
                                      {
                                          pass.NextPass();
                                          Console.WriteLine(s);
+                                         Console.WriteLine(c.StreamReader.ReadLine());
                                          SendNext(c);
+                                         Chat(index);
                                      }
                                      else if (s == "Chunk")
                                      {
@@ -48,13 +50,14 @@ namespace Master
                              }));
         }
 
-        public static void Chat(int index, string message)
+        public static void Chat(int index)
         {
             foreach (var client in _Clients)
             {
                 if (index != client.Key)
                 {
-                    client.Value.StreamWriter.WriteLine($"{index}: {message}"); // should write new password
+                    client.Value.StreamWriter.WriteLine("password");
+                    SendNext(client.Value); // should write new password
                 }
             }
         }
