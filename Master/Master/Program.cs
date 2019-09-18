@@ -8,7 +8,7 @@ namespace Master
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            new TempTest().TestOutputAllChunks();
+            //new TempTest().TestOutputAllChunks();
             
 
             while (true)
