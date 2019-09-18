@@ -34,11 +34,17 @@ namespace Master
             return s;
         }
 
+        public void ResetCount()
+        {
+            nextChunk = 0;
+
+        }
         public List<string> GetNextChunk()
         {
-            if (nextChunk > ChunkList.Count)
+            if (nextChunk == ChunkList.Count)
             {
                 nextChunk = 0;
+                Console.WriteLine("Password not found");
             }
             List<string> chunk = ChunkList[nextChunk];
             nextChunk++;

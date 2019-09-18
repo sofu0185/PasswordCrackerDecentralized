@@ -58,6 +58,7 @@ namespace Master
                                          Console.WriteLine(stopwatch.Elapsed);
                                          lock (dict)
                                          {
+                                             dict.ResetCount();
                                              SendNext(c);
                                          }
                                          //Chat(index);
