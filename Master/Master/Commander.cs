@@ -12,11 +12,11 @@ namespace Master
     public static class Commander
     {
         private static Dictionary<int, Client> _Clients = new Dictionary<int, Client>();
-        private static Password pass = new Password();
+        private static Passwords pass = new Passwords();
         private static List<Task> monitorTasks = new List<Task>();
         private static int _index = 1;
         private static Stopwatch stopwatch = new Stopwatch();
-        private static Dictionary dict = new Dictionary();
+        private static Chunks dict = new Chunks();
         
         public static void HandShake(TcpClient client)
         {
@@ -32,11 +32,9 @@ namespace Master
 
         public static Task MonitorTask(Client c, int index)
         {
-            return Task.Run((() =>
-                             {
-                                 
-                                     SendNext(c);
-                                 
+            return Task.Run((() => 
+                            {
+                                 SendNext(c);
                                  while (true)
                                  {
                                      string s = c.StreamReader.ReadLine();
