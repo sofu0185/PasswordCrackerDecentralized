@@ -22,6 +22,18 @@ namespace Master
             SplitChunks();
         }
 
+        public string ChunkToString()
+        {
+            List<string> chunk = GetNextChunk();
+            string s = "";
+            foreach (string line in chunk)
+            {
+                s += "," + line;
+            }
+
+            return s;
+        }
+
         public List<string> GetNextChunk()
         {
             if (nextChunk == ChunkList.Count)
