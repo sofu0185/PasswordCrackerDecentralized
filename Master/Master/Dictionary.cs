@@ -58,21 +58,38 @@ namespace Master
         {
             ChunkList = new List<List<string>>();
 
-            while (index < fullList.Count)
-            {
-                //Ny chunk
-                List<String> chunk = new List<String>();
+            //while (index < fullList.Count)
+            //{
+            //    //Ny chunk
+            //    List<String> chunk = new List<String>();
 
-                //Der må kun indsættes chunkSize ord ind i hver chunk.
-                for (int i = 0; i < chunkSize; i++)
+            //    //Der må kun indsættes chunkSize ord ind i hver chunk.
+            //    for (int i = 0; i < chunkSize; i++)
+            //    {
+            //        //Hvis vi er nået længere end der er ord i vores liste så break ud
+            //        if (index == fullList.Count) break;
+            //        chunk.Add(fullList[index]);
+            //        index++;
+            //    }
+            //    ChunkList.Add(chunk);
+            //}
+
+            int count = 0;
+            //Ny chunk
+            List<string> chunk = new List<string>();
+            foreach(string s in fullList)
+            {
+                //Ny chunk hvis ord i chunk er 10000
+                if (count == 10_000)
                 {
-                    //Hvis vi er nået længere end der er ord i vores liste så break ud
-                    if (index == fullList.Count) break;
-                    chunk.Add(fullList[index]);
-                    index++;
+                    ChunkList.Add(chunk);
+                    chunk = new List<string>();
+                    count = 0;
                 }
-                ChunkList.Add(chunk);
+                chunk.Add(s);
+                count++;
             }
+            ChunkList.Add(chunk);
 
             int o = 0;
             foreach (var ll in ChunkList)
@@ -82,6 +99,7 @@ namespace Master
 
             Console.WriteLine(o);
         }
+
 
         public void GetFullList()
         {
