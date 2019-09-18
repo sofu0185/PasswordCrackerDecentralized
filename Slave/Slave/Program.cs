@@ -10,8 +10,8 @@ namespace Slave
 {
     class Program
     {
-        public const int PORT = 0;
-        public const string IPADDRESS = "";
+        public const int PORT = 6789;
+        public const string IPADDRESS = "10.200.125.119";
         
         static void Main(string[] args)
         {
@@ -21,7 +21,9 @@ namespace Slave
 
             using (NetworkStream ns = clientSocket.GetStream())
             {
-                Task<ValueTuple<bool, string>> crackingTask = null;
+                StreamWriter sw = new StreamWriter(ns);
+                StreamReader sr = new StreamReader(ns);
+                Task <ValueTuple<bool, string>> crackingTask = null;
 
                 
 
@@ -32,53 +34,51 @@ namespace Slave
 
                     CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
                     CancellationToken cct = crackingTokenSource.Token;
-                    using (StreamReader sr = new StreamReader(ns))
+                    
+                    string hashedPassword = null;
+                    List<string> dicChunk = null;
+                    try
                     {
-                        string hashedPassword = null;
-                        List<string> dicChunk = null;
-                        try
-                        {
-                            hashedPassword = sr.ReadLine();
-                            string allWords = sr.ReadLine();
+                        hashedPassword = sr.ReadLine();
+                        string allWords = sr.ReadLine();
 
-                            dicChunk = allWords.Split(',').ToList();
-                        }
-                        catch (IOException e)
-                        {
-                            if (e.InnerException.GetType() != typeof(SocketException))
-                                throw e;
-                        }
-
-                        // Can return success or newChunk
-                        crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
-                        Task t = Task.Run(() =>
-                        {
-                            string extraMessage = sr.ReadLine();
-                            if (extraMessage == "password")
-                            {
-                                crackingTokenSource.Cancel();
-                            }
-
-                        });
-                        crackingTask.Wait();
-                        //tcpTokenSource.Cancel();
+                        dicChunk = allWords.Split(',').ToList();
                     }
+                    catch (IOException e)
+                    {
+                        if (e.InnerException.GetType() != typeof(SocketException))
+                            throw e;
+                    }
+
+                    // Can return success or newChunk
+                    crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
+                    //Task t = Task.Run(() =>
+                    //{
+                    //    string extraMessage = sr.ReadLine();
+                    //    if (extraMessage == "password")
+                    //    {
+                    //        crackingTokenSource.Cancel();
+                    //    }
+
+                    //});
+                    crackingTask.Wait();
+                    //tcpTokenSource.Cancel();
+                
 
                     if (crackingTask.IsCompletedSuccessfully)
                     {
-                        using (StreamWriter sw = new StreamWriter(ns))
+                        Console.WriteLine(crackingTask.Result.Item1.ToString());
+                        sw.AutoFlush = true;
+                        if (crackingTask.Result.Item1)
                         {
-                            sw.AutoFlush = true;
-                            if (crackingTask.Result.Item1)
-                            {
-                                sw.WriteLine("passwd");
-                                sw.WriteLine(crackingTask.Result.Item2);
-                            }
-                            else if(crackingTask.Result.Item1)
-                            {
-                                sw.WriteLine("Chunk");
-                            }
-                        }                        
+                            sw.WriteLine("passwd");
+                            sw.WriteLine(crackingTask.Result.Item2);
+                        }
+                        else if(!crackingTask.Result.Item1)
+                        {
+                            sw.WriteLine("Chunk");
+                        }
+                                               
                     }
                 }
             }

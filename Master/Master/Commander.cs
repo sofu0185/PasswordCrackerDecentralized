@@ -34,7 +34,11 @@ namespace Master
                                  while (true)
                                  {
                                      string s = c.StreamReader.ReadLine();
-                                     if (s.Contains("passwd"))
+                                     if (String.IsNullOrEmpty(s))
+                                     {
+                                         
+                                     }
+                                     else if (s.Contains("passwd"))
                                      {
                                          pass.NextPass();
                                          Console.WriteLine(s);
