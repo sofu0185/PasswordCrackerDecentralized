@@ -52,20 +52,19 @@ namespace Master
         {
             ChunkList = new List<List<string>>();
 
-            for (int x = 0; x < fullList.Count / chunkSize; x++)
+            int count = 0;
+            //Ny chunk
+            List<string> chunk = new List<string>();
+            foreach(string s in fullList)
             {
-                //Ny chunk
-                List<String> chunk = new List<String>();
-
-                //Der må kun indsættes chunkSize ord ind i hver chunk.
-                for (int i = 0; i < chunkSize; i++)
+                //Ny chunk hvis ord i chunk er 10000
+                if (count == 10_000)
                 {
-                    //Hvis vi er nået længere end der er ord i vores liste så break ud
-                    if (index == fullList.Count) break;
-                    chunk.Add(fullList[index]);
-                    index++;
+                    ChunkList.Add(chunk);
+                    chunk = new List<string>();
                 }
-                ChunkList.Add(chunk);
+                chunk.Add(s);
+                count++;
             }
         }
 
