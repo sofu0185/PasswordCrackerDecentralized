@@ -11,7 +11,7 @@ namespace Slave
     class Program
     {
         public const int PORT = 6789;
-        public const string IPADDRESS = "192.168.103.178";
+        public const string IPADDRESS = "localhost";
         
         static void Main(string[] args)
         {

@@ -16,10 +16,17 @@ namespace Master
         private static List<Task> monitorTasks = new List<Task>();
         private static int _index = 1;
         private static Stopwatch stopwatch = new Stopwatch();
-        private static Chunks dict = new Chunks();
+        private static Chunks dict;
+
+        public static void Start()
+        {
+            Console.WriteLine("Starting server");
+            dict = new Chunks();
+        }
         
         public static void HandShake(TcpClient client)
         {
+            client.NoDelay = true;
             NetworkStream networkStream = client.GetStream();
             stopwatch.Start();
             StreamReader streamReader = new StreamReader(networkStream);
@@ -93,7 +100,7 @@ namespace Master
         public static void SendNext(Client c)
         {
             c.StreamWriter.WriteLine(pass.GetPass());
-            Task t = new Task((() => c.StreamWriter.WriteLine(dict.ChunkToString())));
+            Task t = new Task((() => c.StreamWriter.WriteLine(dict.GetNextChunk())));
             t.Start();
         }
     }
