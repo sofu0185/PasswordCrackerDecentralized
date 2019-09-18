@@ -11,7 +11,7 @@ namespace Master
             while (true)
             {
                 TcpClient client = Server.AcceptClient().Result;
-                ChatRoom.HandShake(client);
+                Commander.HandShake(client);
             }
         }
     }

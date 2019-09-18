@@ -8,7 +8,7 @@ namespace Master
     using System.Net.Sockets;
     using System.Threading.Tasks;
 
-    public static class ChatRoom
+    public static class Commander
     {
         private static Dictionary<int, Client> _Clients     = new Dictionary<int, Client>();
         private static List<Task>                 monitorTasks = new List<Task>();

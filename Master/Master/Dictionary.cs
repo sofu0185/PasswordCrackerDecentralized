@@ -22,7 +22,7 @@ namespace Master
             List<String> fullList = GetFullList();
             List<List<string>> chunkList = new List<List<string>>();
 
-            for (int x = 0; x <= fullList.Count / chunkSize; x++)
+            for (int x = 0; x < fullList.Count / chunkSize; x++)
             {
                 //Ny chunk
                 List<String> chunk = new List<String>();
@@ -31,7 +31,7 @@ namespace Master
                 for (int i = 0; i < chunkSize; i++)
                 {
                     //Hvis vi er nået længere end der er ord i vores liste så break ud
-                    if (index >= fullList.Count)
+                    if (index == fullList.Count)
                     {
                         break;
                     }
