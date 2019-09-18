@@ -24,92 +24,13 @@ namespace Slave
             // seems to be same speed
         }
 
-
-
-
-        /// <summary>
-        /// Generates a lot of variations, encrypts each of the and compares it to a single entry in the password file
-        /// </summary>
-        /// <param name="wordsChunk">A chunk of words from the dictionary</param>
-        /// <param name="entryptedPasswordBase64">A single encrypted password</param>
-        /// <returns>A flag showing if a password was found and if a password was found return it else null</returns>
-        public (bool, string) CheckWordsWithVariations(List<string> wordsChunk, string entryptedPasswordBase64)
-        {
-            byte[] encryptedPassword = Convert.FromBase64String(entryptedPasswordBase64);
-
-            foreach (string dictionaryEntry in wordsChunk)
-            {
-                String possiblePassword = dictionaryEntry;
-                (bool, string) partialResult = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePassword);
-                if (partialResult.Item1)
-                {
-                    return (true, partialResult.Item2);
-                }
-
-                String possiblePasswordUpperCase = dictionaryEntry.ToUpper();
-                (bool, string) partialResultUpperCase = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePasswordUpperCase);
-                if (partialResultUpperCase.Item1)
-                {
-                    return (true, partialResultUpperCase.Item2);
-                }
-
-                String possiblePasswordCapitalized = StringUtilities.Capitalize(dictionaryEntry);
-                (bool, string) partialResultCapitalized = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePasswordCapitalized);
-                if (partialResultCapitalized.Item1)
-                {
-                    return (true, partialResultCapitalized.Item2);
-                }
-
-                String possiblePasswordReverse = StringUtilities.Reverse(dictionaryEntry);
-                (bool, string) partialResultReverse = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePasswordReverse);
-                if (partialResultReverse.Item1)
-                {
-                    return (true, partialResultReverse.Item2);
-                }
-
-                for (int i = 0; i < 100; i++)
-                {
-                    String possiblePasswordEndDigit = dictionaryEntry + i;
-                    (bool, string) partialResultEndDigit = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePasswordEndDigit);
-                    if (partialResultEndDigit.Item1)
-                    {
-                        return (true, partialResultEndDigit.Item2);
-                    }
-                }
-
-                for (int i = 0; i < 100; i++)
-                {
-                    String possiblePasswordStartDigit = i + dictionaryEntry;
-                    (bool, string) partialResultStartDigit = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePasswordStartDigit);
-                    if (partialResultStartDigit.Item1)
-                    {
-                        return (true, partialResultStartDigit.Item2);
-                    }
-                }
-
-                for (int i = 0; i < 10; i++)
-                {
-                    for (int j = 0; j < 10; j++)
-                    {
-                        String possiblePasswordStartEndDigit = i + dictionaryEntry + j;
-                        (bool, string) partialResultStartEndDigit = CheckSingleWordAndSinglePassword(encryptedPassword, possiblePasswordStartEndDigit);
-                        if (partialResultStartEndDigit.Item1)
-                        {
-                            return (true, partialResultStartEndDigit.Item2);
-                        }
-                    }
-                }                
-            }
-            return (false, null);
-        }
-
         /// <summary>
         /// Generates a lot of variations, encrypts each of the and compares it to all entries in the password file
         /// </summary>
         /// <param name="wordsChunk">A chunk of words from the dictionary</param>
         /// <param name="encryptedPasswordsBase64">List of names and encrypted password pairs</param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        public (bool, List<(string name, string pass)>) CheckWordsWithVariations(List<string> wordsChunk, List<(string name, string pass)> encryptedPasswordsBase64)
+        public (bool, List<(string name, string pass)>) CheckWords(List<string> wordsChunk, List<(string name, string pass)> encryptedPasswordsBase64)
         {
             List<(string, byte[])> encryptedPasswords = new List<(string, byte[])>();
             foreach ((string name, string pass) encryptedPasswordBase64 in encryptedPasswordsBase64)
@@ -122,28 +43,28 @@ namespace Slave
             foreach (string dictionaryEntry in wordsChunk)
             {
                 String possiblePassword = dictionaryEntry.ToLower();
-                (bool, List<(string, string)>) partialResult = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePassword);
+                (bool, List<(string, string)>) partialResult = CheckSingleVariations(encryptedPasswords, possiblePassword);
                 if (partialResult.Item1)
                 {
                     crackedPasswords.AddRange(partialResult.Item2);
                 }
 
                 String possiblePasswordUpperCase = dictionaryEntry.ToUpper();
-                (bool, List<(string, string)>) partialResultUpperCase = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordUpperCase);
+                (bool, List<(string, string)>) partialResultUpperCase = CheckSingleVariations(encryptedPasswords, possiblePasswordUpperCase);
                 if (partialResultUpperCase.Item1)
                 {
                     crackedPasswords.AddRange(partialResultUpperCase.Item2);
                 }
 
                 String possiblePasswordCapitalized = StringUtilities.Capitalize(dictionaryEntry);
-                (bool, List<(string, string)>) partialResultCapitalized = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordCapitalized);
+                (bool, List<(string, string)>) partialResultCapitalized = CheckSingleVariations(encryptedPasswords, possiblePasswordCapitalized);
                 if (partialResultCapitalized.Item1)
                 {
                     crackedPasswords.AddRange(partialResultCapitalized.Item2);
                 }
 
                 String possiblePasswordReverse = StringUtilities.Reverse(dictionaryEntry);
-                (bool, List<(string, string)>) partialResultReverse = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordReverse);
+                (bool, List<(string, string)>) partialResultReverse = CheckSingleVariations(encryptedPasswords, possiblePasswordReverse);
                 if (partialResultReverse.Item1)
                 {
                     crackedPasswords.AddRange(partialResultReverse.Item2);
@@ -152,7 +73,7 @@ namespace Slave
                 for (int i = 0; i < 100; i++)
                 {
                     String possiblePasswordEndDigit = dictionaryEntry + i;
-                    (bool, List<(string, string)>) partialResultEndDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordEndDigit);
+                    (bool, List<(string, string)>) partialResultEndDigit = CheckSingleVariations(encryptedPasswords, possiblePasswordEndDigit);
                     if (partialResultEndDigit.Item1)
                     {
                         crackedPasswords.AddRange(partialResultEndDigit.Item2);
@@ -162,7 +83,7 @@ namespace Slave
                 for (int i = 0; i < 100; i++)
                 {
                     String possiblePasswordStartDigit = i + dictionaryEntry;
-                    (bool, List<(string, string)>) partialResultStartDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordStartDigit);
+                    (bool, List<(string, string)>) partialResultStartDigit = CheckSingleVariations(encryptedPasswords, possiblePasswordStartDigit);
                     if (partialResultStartDigit.Item1)
                     {
                         crackedPasswords.AddRange(partialResultStartDigit.Item2);
@@ -174,7 +95,7 @@ namespace Slave
                     for (int j = 0; j < 10; j++)
                     {
                         String possiblePasswordStartEndDigit = i + dictionaryEntry + j;
-                        (bool, List<(string, string)>) partialResultStartEndDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordStartEndDigit);
+                        (bool, List<(string, string)>) partialResultStartEndDigit = CheckSingleVariations(encryptedPasswords, possiblePasswordStartEndDigit);
                         if (partialResultStartEndDigit.Item1)
                         {
                             crackedPasswords.AddRange(partialResultStartEndDigit.Item2);
@@ -186,29 +107,13 @@ namespace Slave
             return (crackSucceded, crackedPasswords);
         }
 
-
-        /// <summary>
-        /// Checks a single word (or rather a variation of a word): Encrypts and compares to a sigle entry in the password file
-        /// </summary>
-        /// <param name="encryptedPassword">A single encrypted password from the password file</param>
-        /// <param name="possiblePassword"></param>
-        /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        private (bool, string) CheckSingleWordAndSinglePassword(byte[] encryptedPassword, String possiblePassword)
-        {
-            //HASH VALUE
-            byte[] possibleEncryptedPasswordByte = HashPossiblePassword(possiblePassword);
-            //string encryptedPasswordBase64 = System.Convert.ToBase64String(encryptedPassword);
-
-            return CompareBytes(encryptedPassword, possibleEncryptedPasswordByte) ? (true, possiblePassword) : (false, null);   //compares byte arrays
-        }
-
         /// <summary>
         /// Checks a single word (or rather a variation of a word): Encrypts and compares to all entries in the password file
         /// </summary>
         /// <param name="encryptedPasswords">List of encrypted passwords from the password file</param>
         /// <param name="possiblePassword"></param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        private (bool, List<(string, string)>) CheckSingleWordAndMultiplePasswords(List<(string, byte[])> encryptedPasswords, String possiblePassword)
+        private (bool, List<(string, string)>) CheckSingleVariations(List<(string, byte[])> encryptedPasswords, String possiblePassword)
         {
             //HASH VALUE
             byte[] possibleEncryptedPasswordByte = HashPossiblePassword(possiblePassword);
@@ -225,7 +130,6 @@ namespace Slave
                 }
             }
             return (passwordFound, crackedPaswords);
-
         }
 
         private byte[] HashPossiblePassword(string possiblePassword)

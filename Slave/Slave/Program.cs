@@ -23,9 +23,8 @@ namespace Slave
             {
                 StreamWriter sw = new StreamWriter(ns);
                 StreamReader sr = new StreamReader(ns);
-                //Task <ValueTuple<bool, string>> crackingTask = null;
-                Task<(bool, List<(string, string)>)> crackingTask = null;
 
+                Task<(bool, List<(string, string)>)> crackingTask = null;
 
                 while (clientSocket.Connected)
                 {
@@ -33,14 +32,12 @@ namespace Slave
                     CancellationToken cct = crackingTokenSource.Token;
 
                     string chunkId = null;
-                    //string hashedPassword = null;
                     List<(string, string)> hashedPasswords = new List<(string, string)>();
                     List<string> dicChunk = null;
                     try
                     {
                         chunkId = sr.ReadLine();
 
-                        //hashedPassword = sr.ReadLine();
                         string allPasswords = sr.ReadLine();
                         foreach (string user in allPasswords.Split(','))
                         {
@@ -64,8 +61,7 @@ namespace Slave
                     //WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
 
                     // Can return success or newChunk
-                    //crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
-                    crackingTask = Task<(bool, List<(string, string)>)>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPasswords), cct);
+                    crackingTask = Task.Run(() => cracking.CheckWords(dicChunk, hashedPasswords), cct);
 
                     //Task t = Task.Run(() =>
                     //{
@@ -87,13 +83,6 @@ namespace Slave
                         WriteLineWithColor(crackingTask.Result.Item1, color);
 
                         sw.AutoFlush = true;
-                        //if (crackingTask.Result.Item1)
-                        //{
-                        //    sw.WriteLine("passwd");
-                        //    sw.WriteLine(crackingTask.Result.Item2);
-
-                        //    WriteLineWithColor(crackingTask.Result.Item2, ConsoleColor.Yellow);
-                        //}
                         if (crackingTask.Result.Item1)
                         {
                             sw.WriteLine("passwd");
