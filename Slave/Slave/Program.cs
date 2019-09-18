@@ -50,7 +50,10 @@ namespace Slave
                             throw e;
                     }
 
-                    Console.WriteLine($"Chunk and hashed password recived:\n\t{hashedPassword}");
+                    Console.WriteLine($"Chunk and hashed password recived:\n\t");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine(hashedPassword);
+                    Console.ForegroundColor = ConsoleColor.White;
 
                     // Can return success or newChunk
                     crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
@@ -69,17 +72,24 @@ namespace Slave
 
                     if (crackingTask.IsCompletedSuccessfully)
                     {
-                        Console.WriteLine("Was password in chunk? " + crackingTask.Result.Item1.ToString());
+                        Console.WriteLine("Was password in chunk? ");
+                        Console.ForegroundColor = crackingTask.Result.Item1 ? ConsoleColor.Green : ConsoleColor.Red;
+                        Console.WriteLine($"{crackingTask.Result.Item1}");
+                        Console.ForegroundColor = ConsoleColor.White;
+
                         sw.AutoFlush = true;
                         if (crackingTask.Result.Item1)
                         {
                             sw.WriteLine("passwd");
                             sw.WriteLine(crackingTask.Result.Item2);
+                            Console.WriteLine($"\t{crackingTask.Result.Item2}");
                         }
-                        else if(!crackingTask.Result.Item1)
+                        else
                         {
                             sw.WriteLine("Chunk");
                         }
+
+                        Console.WriteLine();
                                                
                     }
                 }
