@@ -31,7 +31,14 @@ namespace Master
                                  while (true)
                                  {
                                      string s = c.StreamReader.ReadLine();
-                                     Chat(_index, s);
+                                     if (s.Contains("passwd"))
+                                     {
+                                         Chat(index, s);
+                                     }
+                                     else if (s == "Chunk")
+                                     {
+                                         //Send next chunk
+                                     }
                                  }
                              }));
         }
@@ -42,7 +49,7 @@ namespace Master
             {
                 if (index != client.Key)
                 {
-                    client.Value.StreamWriter.WriteLine($"{index}: {message}");
+                    client.Value.StreamWriter.WriteLine($"{index}: {message}"); // should write new password
                 }
             }
         }
