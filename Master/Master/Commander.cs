@@ -67,6 +67,16 @@ namespace Master
                                      {
                                          lock (dict)
                                          {
+                                             if (dict.nextChunk == dict.ChunkList.Count)
+                                             {
+                                                 Console.WriteLine("Pass not found");
+                                                 if (pass.NextPass())
+                                                 {
+                                                     stopwatch.Stop();
+                                                     Console.WriteLine(stopwatch.Elapsed);
+                                                     Console.ReadLine();
+                                                 }
+                                             }
                                              SendNext(c);
                                          }
                                      }

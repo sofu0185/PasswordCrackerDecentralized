@@ -11,10 +11,10 @@ namespace Master
     {
         private FileStream _fs = new FileStream("Text files/webster-dictionary.txt", FileMode.Open, FileAccess.Read);
         private List<String> fullList = new List<string>();
-        private List<List<string>> ChunkList;
+        public List<List<string>> ChunkList;
         private int index = 0;
         private int chunkSize = 10000;
-        private int nextChunk = 0;
+        public int nextChunk = 0;
 
         public Dictionary()
         {
@@ -44,7 +44,6 @@ namespace Master
             if (nextChunk == ChunkList.Count)
             {
                 nextChunk = 0;
-                Console.WriteLine("Password not found");
             }
             List<string> chunk = ChunkList[nextChunk];
             nextChunk++;
