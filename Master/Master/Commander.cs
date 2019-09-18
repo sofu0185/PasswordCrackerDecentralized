@@ -39,7 +39,7 @@ namespace Master
 
         public static Task MonitorTask(Client c, int index)
         {
-            return Task.Run((() => 
+            return Task.Run(() => 
                             {
                                  SendNext(c);
                                  while (true)
@@ -82,7 +82,7 @@ namespace Master
                                          
                                      }
                                  }
-                             }));
+                             });
         }
 
         public static void Chat(int index)
@@ -99,6 +99,7 @@ namespace Master
 
         public static void SendNext(Client c)
         {
+            c.StreamWriter.WriteLine(dict.nextChunk);
             c.StreamWriter.WriteLine(pass.GetPass());
             Task t = new Task((() => c.StreamWriter.WriteLine(dict.GetNextChunk())));
             t.Start();

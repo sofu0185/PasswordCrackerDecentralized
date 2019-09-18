@@ -31,11 +31,13 @@ namespace Slave
                 {
                     CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
                     CancellationToken cct = crackingTokenSource.Token;
-                    
+
+                    string chunkId = null;
                     string hashedPassword = null;
                     List<string> dicChunk = null;
                     try
                     {
+                        chunkId = sr.ReadLine();
                         hashedPassword = sr.ReadLine();
                         string allWords = sr.ReadLine();
 
@@ -47,10 +49,10 @@ namespace Slave
                             throw e;
                     }
 
-                    Console.Write($"Chunk and hashed password recived:\n\t");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine(hashedPassword);
-                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write($"Chunk [");
+                    WriteWithColor(chunkId, ConsoleColor.DarkGray);
+                    Console.Write("] and hashed password recived:\n\t");
+                    WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
 
                     // Can return success or newChunk
                     crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
@@ -69,17 +71,17 @@ namespace Slave
 
                     if (crackingTask.IsCompletedSuccessfully)
                     {
-                        Console.Write("Was password in chunk? ");
-                        Console.ForegroundColor = crackingTask.Result.Item1 ? ConsoleColor.Green : ConsoleColor.Red;
-                        Console.WriteLine($"{crackingTask.Result.Item1}");
-                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.Write("Did any passwords match in chunk? ");
+                        ConsoleColor color = crackingTask.Result.Item1 ? ConsoleColor.Green : ConsoleColor.Red;
+                        WriteLineWithColor(crackingTask.Result.Item1, color);
 
                         sw.AutoFlush = true;
                         if (crackingTask.Result.Item1)
                         {
                             sw.WriteLine("passwd");
                             sw.WriteLine(crackingTask.Result.Item2);
-                            Console.WriteLine($"\tPassword cracked: {crackingTask.Result.Item2}");
+
+                            WriteLineWithColor(crackingTask.Result.Item2, ConsoleColor.Yellow);
                         }
                         else
                         {
@@ -93,8 +95,20 @@ namespace Slave
             }
         }
 
-        
-
+        public static void WriteWithColor(object message, ConsoleColor color)
+        {
+            ConsoleColor originalColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.Write(message);
+            Console.ForegroundColor = originalColor;
+        }
+        public static void WriteLineWithColor(object message, ConsoleColor color)
+        {
+            ConsoleColor originalColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            Console.ForegroundColor = originalColor;
+        }
 
     }
 }
