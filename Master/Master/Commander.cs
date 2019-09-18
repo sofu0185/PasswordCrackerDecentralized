@@ -95,7 +95,8 @@ namespace Master
         public static void SendNext(Client c)
         {
             c.StreamWriter.WriteLine(pass.GetPass());
-            c.StreamWriter.WriteLine(dict.ChunkToString());
+            Task t = new Task((() => c.StreamWriter.WriteLine(dict.ChunkToString())));
+            t.Start();
         }
     }
 }

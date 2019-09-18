@@ -48,8 +48,7 @@ namespace Master
 
             int i = nextChunk;
             nextChunk++;
-            List<string> chunk = ChunkList[i];
-            return chunk;
+            return ChunkList[i];
         }
 
         /// <summary>Returns a list with chunks (a list consisting of strings)  
