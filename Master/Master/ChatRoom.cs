@@ -21,6 +21,7 @@ namespace Master
             streamWriter.AutoFlush = true;
             _Clients.Add(_index, new Client(client, networkStream, streamWriter, streamReader));
             monitorTasks.Add(MonitorTask(_Clients[_index], _index));
+            _index++;
         }
 
         public static Task MonitorTask(Client c, int index)
