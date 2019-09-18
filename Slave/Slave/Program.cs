@@ -50,6 +50,8 @@ namespace Slave
                             throw e;
                     }
 
+                    Console.WriteLine($"Chunk and hashed password recived:\n\t{hashedPassword}");
+
                     // Can return success or newChunk
                     crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
                     //Task t = Task.Run(() =>
@@ -67,7 +69,7 @@ namespace Slave
 
                     if (crackingTask.IsCompletedSuccessfully)
                     {
-                        Console.WriteLine(crackingTask.Result.Item1.ToString());
+                        Console.WriteLine("Was password in chunk? " + crackingTask.Result.Item1.ToString());
                         sw.AutoFlush = true;
                         if (crackingTask.Result.Item1)
                         {
