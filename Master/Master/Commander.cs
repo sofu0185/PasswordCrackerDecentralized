@@ -35,7 +35,7 @@ namespace Master
                                      string s = c.StreamReader.ReadLine();
                                      if (s.Contains("passwd"))
                                      {
-                                         Console.WriteLine(s);
+                                         Console.WriteLine(c.StreamReader.ReadLine());
                                          SendNext(c);
                                          Chat(index);
                                      }
@@ -53,6 +53,7 @@ namespace Master
             {
                 if (index != client.Key)
                 {
+                    client.Value.StreamWriter.WriteLine("password");
                     SendNext(client.Value); // should write new password
                 }
             }
