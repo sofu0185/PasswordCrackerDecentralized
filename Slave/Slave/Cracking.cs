@@ -120,7 +120,6 @@ namespace Slave
 
             if (CompareBytes(encryptedPassword, possibleEncryptedPasswordByte))  //compares byte arrays
             {
-                Console.WriteLine("Password cracked: " + possiblePassword);
                 return (true, possiblePassword);
             }
             else
