@@ -33,7 +33,8 @@ namespace Master
             StreamWriter streamWriter = new StreamWriter(networkStream);
             streamWriter.AutoFlush = true;
             _Clients.Add(_index, new Client(client, networkStream, streamWriter, streamReader));
-            monitorTasks.Add(MonitorTask(_Clients[_index], _index));
+            //monitorTasks.Add(MonitorTask(_Clients[_index], _index));
+            monitorTasks.Add(MonitorTaskMultiplePasswords(_Clients[_index], _index));
             _index++;
         }
 
@@ -68,7 +69,7 @@ namespace Master
                                      }
                                      else if (s == "Chunk")
                                      {
-                                         if (dict.nextChunk == dict.ChunkList.Count)
+                                         if (dict.CurrenntChunkIndex == dict.ChunkList.Count)
                                              {
                                                  Console.WriteLine("Pass not found");
                                                  if (pass.NextPass())
@@ -84,25 +85,46 @@ namespace Master
                                  }
                              });
         }
-
-        public static void Chat(int index)
+        public static Task MonitorTaskMultiplePasswords(Client c, int index)
         {
-            foreach (var client in _Clients)
+            return Task.Run(() =>
             {
-                if (index != client.Key)
+                while (!dict.EndOfChunks)
                 {
-                    client.Value.StreamWriter.WriteLine("password");
-                    SendNext(client.Value); // should write new password
+                    SendNextMultiplePasswords(c);
+
+                    string slaveResponse = c.StreamReader.ReadLine();
+                    if (!String.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
+                    {
+                        int numberOfPassCracked = int.Parse(c.StreamReader.ReadLine());
+                        for(int i = 0; i < numberOfPassCracked; i++)
+                        {
+                            Console.WriteLine(c.StreamReader.ReadLine());
+                        }
+                        
+                        Console.WriteLine(stopwatch.Elapsed);
+                    }
                 }
-            }
+                stopwatch.Stop();
+                Console.WriteLine(stopwatch.Elapsed);
+                Console.ReadLine();
+
+            });
         }
 
         public static void SendNext(Client c)
         {
-            c.StreamWriter.WriteLine(dict.nextChunk);
+            c.StreamWriter.WriteLine(dict.CurrenntChunkIndex);
             c.StreamWriter.WriteLine(pass.GetPass());
-            Task t = new Task((() => c.StreamWriter.WriteLine(dict.GetNextChunk())));
+            Task t = new Task(() => c.StreamWriter.WriteLine(dict.GetNextChunk()));
             t.Start();
+        }
+
+        public static void SendNextMultiplePasswords(Client c)
+        {
+            c.StreamWriter.WriteLine(dict.CurrenntChunkIndex);
+            c.StreamWriter.WriteLine(pass.UsersAndPasswordsAsString);
+            c.StreamWriter.WriteLine(dict.GetChunk());
         }
     }
 }

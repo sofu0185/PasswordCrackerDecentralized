@@ -10,16 +10,18 @@ namespace Master
     {
         private List<String> _fullList = new List<string>();
         public List<List<string>> ChunkList;
-        public List<string> chunks;
+        public List<string> stringChunks;
         private int index = 0;
-        private int chunkSize = 25000;
-        public int nextChunk = 0;
+        private int chunkSize = 10000;
+        public int CurrenntChunkIndex { get; private set; } = 0;
+        public bool EndOfChunks { get; set; }
 
         public Chunks()
         {
             _fullList = FileHandler.ReadAllWordsInDictionary();
             SplitChunks();
-            chunks = new List<string>();
+            stringChunks = new List<string>();
+            // compute the comma seperated strings for sending to the slave
             foreach (var chunk in ChunkList)
             {
                 string s = "";
@@ -27,7 +29,8 @@ namespace Master
                 {
                     s += "," + str;
                 }
-                chunks.Add(s);
+                s = s.TrimStart(',');
+                stringChunks.Add(s);
             }
 
             Console.WriteLine("Chunks ready");
@@ -47,19 +50,31 @@ namespace Master
 
         public void ResetCount()
         {
-            nextChunk = 0;
+            CurrenntChunkIndex = 0;
 
         }
         public string GetNextChunk()
         {
-            if (nextChunk == chunks.Count)
+            if (CurrenntChunkIndex == stringChunks.Count)
             {
-                nextChunk = 0;
+                CurrenntChunkIndex = 0;
             }
 
-            int i = nextChunk;
-            nextChunk++;
-            return chunks[i];
+            int i = CurrenntChunkIndex;
+            CurrenntChunkIndex++;
+            return stringChunks[i];
+        }
+
+        public string GetChunk()
+        {
+            int i = CurrenntChunkIndex;
+            CurrenntChunkIndex++;
+            if (CurrenntChunkIndex == stringChunks.Count)
+            {
+                EndOfChunks = true;
+            }
+            return stringChunks[i];
+            
         }
 
         /// <summary>Returns a list with chunks (a list consisting of strings)  

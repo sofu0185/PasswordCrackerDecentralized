@@ -23,9 +23,9 @@ namespace Slave
             {
                 StreamWriter sw = new StreamWriter(ns);
                 StreamReader sr = new StreamReader(ns);
-                Task <ValueTuple<bool, string>> crackingTask = null;
+                //Task <ValueTuple<bool, string>> crackingTask = null;
+                Task<(bool, List<(string, string)>)> crackingTask = null;
 
-                
 
                 while (clientSocket.Connected)
                 {
@@ -33,14 +33,23 @@ namespace Slave
                     CancellationToken cct = crackingTokenSource.Token;
 
                     string chunkId = null;
-                    string hashedPassword = null;
+                    //string hashedPassword = null;
+                    List<(string, string)> hashedPasswords = new List<(string, string)>();
                     List<string> dicChunk = null;
                     try
                     {
                         chunkId = sr.ReadLine();
-                        hashedPassword = sr.ReadLine();
-                        string allWords = sr.ReadLine();
 
+                        //hashedPassword = sr.ReadLine();
+                        string allPasswords = sr.ReadLine();
+                        foreach (string user in allPasswords.Split(','))
+                        {
+                            string[] tempSplit = user.Split(':');
+                            hashedPasswords.Add((tempSplit[0], tempSplit[1]));
+                        }
+
+
+                        string allWords = sr.ReadLine();
                         dicChunk = allWords.Split(',').ToList();
                     }
                     catch (IOException e)
@@ -51,11 +60,13 @@ namespace Slave
 
                     Console.Write($"Chunk [");
                     WriteWithColor(chunkId, ConsoleColor.DarkGray);
-                    Console.Write("] and hashed password recived:\n\t");
-                    WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
+                    Console.WriteLine("] and hashed password recived.");
+                    //WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
 
                     // Can return success or newChunk
-                    crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
+                    //crackingTask = Task<ValueTuple<bool, string>>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPassword), cct);
+                    crackingTask = Task<(bool, List<(string, string)>)>.Run(() => cracking.CheckWordsWithVariations(dicChunk, hashedPasswords), cct);
+
                     //Task t = Task.Run(() =>
                     //{
                     //    string extraMessage = sr.ReadLine();
@@ -76,12 +87,23 @@ namespace Slave
                         WriteLineWithColor(crackingTask.Result.Item1, color);
 
                         sw.AutoFlush = true;
+                        //if (crackingTask.Result.Item1)
+                        //{
+                        //    sw.WriteLine("passwd");
+                        //    sw.WriteLine(crackingTask.Result.Item2);
+
+                        //    WriteLineWithColor(crackingTask.Result.Item2, ConsoleColor.Yellow);
+                        //}
                         if (crackingTask.Result.Item1)
                         {
                             sw.WriteLine("passwd");
-                            sw.WriteLine(crackingTask.Result.Item2);
-
-                            WriteLineWithColor(crackingTask.Result.Item2, ConsoleColor.Yellow);
+                            sw.WriteLine(crackingTask.Result.Item2.Count);
+                            foreach ((string name, string pass) userAndPass in crackingTask.Result.Item2)
+                            {
+                                string userAndPassAsString = $"{userAndPass.name}: {userAndPass.pass}";
+                                sw.WriteLine(userAndPassAsString);
+                                WriteLineWithColor($"\t{userAndPassAsString}", ConsoleColor.Yellow);
+                            }
                         }
                         else
                         {

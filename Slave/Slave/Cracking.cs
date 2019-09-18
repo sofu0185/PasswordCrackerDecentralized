@@ -107,43 +107,43 @@ namespace Slave
         /// Generates a lot of variations, encrypts each of the and compares it to all entries in the password file
         /// </summary>
         /// <param name="wordsChunk">A chunk of words from the dictionary</param>
-        /// <param name="encryptedPasswordsBase64">List of encrypted password</param>
+        /// <param name="encryptedPasswordsBase64">List of names and encrypted password pairs</param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        public (bool, string) CheckWordsWithVariations(List<string> wordsChunk, List<string> encryptedPasswordsBase64)
+        public (bool, List<(string name, string pass)>) CheckWordsWithVariations(List<string> wordsChunk, List<(string name, string pass)> encryptedPasswordsBase64)
         {
-            List<byte[]> encryptedPasswords = new List<byte[]>();
-            foreach (string encryptedPasswordBase64 in encryptedPasswordsBase64)
+            List<(string, byte[])> encryptedPasswords = new List<(string, byte[])>();
+            foreach ((string name, string pass) encryptedPasswordBase64 in encryptedPasswordsBase64)
             {
-                encryptedPasswords.Add(Convert.FromBase64String(encryptedPasswordBase64));
+                encryptedPasswords.Add((encryptedPasswordBase64.name, Convert.FromBase64String(encryptedPasswordBase64.pass)));
             }
 
-            List<string> crackedPasswords = new List<string>();
+            List<(string, string)> crackedPasswords = new List<(string, string)>();
 
             foreach (string dictionaryEntry in wordsChunk)
             {
-                String possiblePassword = dictionaryEntry;
-                (bool, List<string>) partialResult = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePassword);
+                String possiblePassword = dictionaryEntry.ToLower();
+                (bool, List<(string, string)>) partialResult = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePassword);
                 if (partialResult.Item1)
                 {
                     crackedPasswords.AddRange(partialResult.Item2);
                 }
 
                 String possiblePasswordUpperCase = dictionaryEntry.ToUpper();
-                (bool, List<string>) partialResultUpperCase = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordUpperCase);
+                (bool, List<(string, string)>) partialResultUpperCase = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordUpperCase);
                 if (partialResultUpperCase.Item1)
                 {
                     crackedPasswords.AddRange(partialResultUpperCase.Item2);
                 }
 
                 String possiblePasswordCapitalized = StringUtilities.Capitalize(dictionaryEntry);
-                (bool, List<string>) partialResultCapitalized = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordCapitalized);
+                (bool, List<(string, string)>) partialResultCapitalized = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordCapitalized);
                 if (partialResultCapitalized.Item1)
                 {
                     crackedPasswords.AddRange(partialResultCapitalized.Item2);
                 }
 
                 String possiblePasswordReverse = StringUtilities.Reverse(dictionaryEntry);
-                (bool, List<string>) partialResultReverse = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordReverse);
+                (bool, List<(string, string)>) partialResultReverse = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordReverse);
                 if (partialResultReverse.Item1)
                 {
                     crackedPasswords.AddRange(partialResultReverse.Item2);
@@ -152,7 +152,7 @@ namespace Slave
                 for (int i = 0; i < 100; i++)
                 {
                     String possiblePasswordEndDigit = dictionaryEntry + i;
-                    (bool, List<string>) partialResultEndDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordEndDigit);
+                    (bool, List<(string, string)>) partialResultEndDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordEndDigit);
                     if (partialResultEndDigit.Item1)
                     {
                         crackedPasswords.AddRange(partialResultEndDigit.Item2);
@@ -162,7 +162,7 @@ namespace Slave
                 for (int i = 0; i < 100; i++)
                 {
                     String possiblePasswordStartDigit = i + dictionaryEntry;
-                    (bool, List<string>) partialResultStartDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordStartDigit);
+                    (bool, List<(string, string)>) partialResultStartDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordStartDigit);
                     if (partialResultStartDigit.Item1)
                     {
                         crackedPasswords.AddRange(partialResultStartDigit.Item2);
@@ -174,7 +174,7 @@ namespace Slave
                     for (int j = 0; j < 10; j++)
                     {
                         String possiblePasswordStartEndDigit = i + dictionaryEntry + j;
-                        (bool, List<string>) partialResultStartEndDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordStartEndDigit);
+                        (bool, List<(string, string)>) partialResultStartEndDigit = CheckSingleWordAndMultiplePasswords(encryptedPasswords, possiblePasswordStartEndDigit);
                         if (partialResultStartEndDigit.Item1)
                         {
                             crackedPasswords.AddRange(partialResultStartEndDigit.Item2);
@@ -182,7 +182,8 @@ namespace Slave
                     }
                 }
             }
-            return (false, null);
+            bool crackSucceded = crackedPasswords.Count != 0;
+            return (crackSucceded, crackedPasswords);
         }
 
 
@@ -207,21 +208,23 @@ namespace Slave
         /// <param name="encryptedPasswords">List of encrypted passwords from the password file</param>
         /// <param name="possiblePassword"></param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        private (bool, List<string>) CheckSingleWordAndMultiplePasswords(List<byte[]> encryptedPasswords, String possiblePassword)
+        private (bool, List<(string, string)>) CheckSingleWordAndMultiplePasswords(List<(string, byte[])> encryptedPasswords, String possiblePassword)
         {
-
             //HASH VALUE
             byte[] possibleEncryptedPasswordByte = HashPossiblePassword(possiblePassword);
 
             bool passwordFound = false;
-            List<string> crackedPaswords = new List<string>();
+            List<(string, string)> crackedPaswords = new List<(string, string)>();
 
-            foreach(byte[] encryptedPassword in encryptedPasswords)
+            foreach((string name, byte[] passByte) encryptedPassword in encryptedPasswords)
             {
-                if (CompareBytes(encryptedPassword, possibleEncryptedPasswordByte))  //compares byte arrays
-                    crackedPaswords.Add(possiblePassword);
+                if (CompareBytes(encryptedPassword.passByte, possibleEncryptedPasswordByte))  //compares byte arrays
+                {
+                    crackedPaswords.Add((encryptedPassword.name, possiblePassword));
+                    passwordFound = true;
+                }
             }
-            return (passwordFound, null);
+            return (passwordFound, crackedPaswords);
 
         }
 
