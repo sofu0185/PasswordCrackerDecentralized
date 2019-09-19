@@ -57,7 +57,7 @@ namespace Slave
 
                     Console.Write($"Chunk [");
                     WriteWithColor(chunkId, ConsoleColor.DarkGray);
-                    Console.WriteLine("] and hashed password recived.");
+                    Console.WriteLine("] and hashed password received.");
                     //WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
 
                     // Can return success or newChunk
