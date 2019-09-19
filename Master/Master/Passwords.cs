@@ -21,26 +21,5 @@ namespace Master
             }
             UsersAndPasswordsAsString = UsersAndPasswordsAsString.TrimEnd(',');
         }
-
-        public string GetPass()
-        {
-            return _list[_currentPassIndex].HashedPassword;
-        }
-
-        public string GetName()
-        {
-            return _list[_currentPassIndex].Username;
-        }
-
-        public bool NextPass()
-        {
-            _currentPassIndex++;
-            if (_currentPassIndex == _list.Count)
-            {
-                return true;
-            }
-
-            return false;
-        }
     }
 }

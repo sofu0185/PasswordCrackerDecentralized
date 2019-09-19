@@ -11,8 +11,7 @@ namespace Master
         private List<String> _fullList = new List<string>();
         public List<List<string>> ChunkList;
         public List<string> stringChunks;
-        private int index = 0;
-        private int chunkSize = 10000;
+        private int chunkSize = Constants.CHUNK_SIZE;
         public int CurrenntChunkIndex { get; private set; } = 0;
         public bool EndOfChunks { get; set; }
 
@@ -21,6 +20,7 @@ namespace Master
             _fullList = FileHandler.ReadAllWordsInDictionary();
             SplitChunks();
             stringChunks = new List<string>();
+
             // compute the comma seperated strings for sending to the slave
             foreach (var chunk in ChunkList)
             {
@@ -36,33 +36,10 @@ namespace Master
             Console.WriteLine("Chunks ready");
         }
 
-        //public string ChunkToString()
-        //{
-        //    List<string> chunk = GetNextChunk();
-        //    string s = "";
-        //    foreach (string line in chunk)
-        //    {
-        //        s += "," + line;
-        //    }
-
-        //    return s;
-        //}
-
         public void ResetCount()
         {
             CurrenntChunkIndex = 0;
 
-        }
-        public string GetNextChunk()
-        {
-            if (CurrenntChunkIndex == stringChunks.Count)
-            {
-                CurrenntChunkIndex = 0;
-            }
-
-            int i = CurrenntChunkIndex;
-            CurrenntChunkIndex++;
-            return stringChunks[i];
         }
 
         public string GetChunk()
@@ -100,14 +77,6 @@ namespace Master
                 count++;
             }
             ChunkList.Add(chunk);
-
-            int o = 0;
-            foreach (var ll in ChunkList)
-            {
-                o += ll.Count;
-            }
-
-            Console.WriteLine(o);
         }
     }
 }

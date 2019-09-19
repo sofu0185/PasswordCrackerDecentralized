@@ -15,10 +15,10 @@ namespace Master
         {
             if (_server == null)
             {
-                _server = TcpListener.Create(6789);
+                _server = TcpListener.Create(Constants.TCP_SERVER_PORT);
                 _server.Start();
             }
-            return Task.Run((() => _server.AcceptTcpClient()));
+            return Task.Run(() => _server.AcceptTcpClient());
         }
     }
 }

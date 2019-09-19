@@ -8,19 +8,16 @@ namespace Master
 {
     public static class FileHandler
     {
-        private const string _dictionaryPath = "Text files/webster-dictionary.txt";
-        private const string _passwordPath = "Text files/passwords.txt";
-
         public static List<string> ReadAllWordsInDictionary()
         {
-            return File.ReadAllLines(_dictionaryPath).ToList();
+            return File.ReadAllLines(Constants.DICTIONARY_PATH).ToList();
         }
 
         public static List<UserInfo> ReadAllPasswords()
         {
             List<UserInfo> result = new List<UserInfo>();
 
-            string[] passlist = File.ReadAllLines(_passwordPath);
+            string[] passlist = File.ReadAllLines(Constants.PASSWORD_PATH);
             foreach(string s in passlist)
             {
                 string[] passAndName = s.Split(':');

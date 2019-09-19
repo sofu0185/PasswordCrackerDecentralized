@@ -28,63 +28,18 @@ namespace Master
         {
             client.NoDelay = true;
             NetworkStream networkStream = client.GetStream();
-            stopwatch.Start();
             StreamReader streamReader = new StreamReader(networkStream);
             StreamWriter streamWriter = new StreamWriter(networkStream);
             streamWriter.AutoFlush = true;
+
             _Clients.Add(_index, new Client(client, networkStream, streamWriter, streamReader));
-            //monitorTasks.Add(MonitorTask(_Clients[_index], _index));
+
+            stopwatch.Start();
             monitorTasks.Add(MonitorTaskMultiplePasswords(_Clients[_index], _index));
+
             _index++;
         }
 
-        public static Task MonitorTask(Client c, int index)
-        {
-            return Task.Run(() => 
-                            {
-                                 SendNext(c);
-                                 while (true)
-                                 {
-                                     string s = c.StreamReader.ReadLine();
-                                     if (String.IsNullOrEmpty(s))
-                                     {
-                                         
-                                     }
-                                     else if (s.Contains("passwd"))
-                                     {
-                                         Console.WriteLine(s);
-                                         Console.WriteLine(pass.GetName() + ": " + c.StreamReader.ReadLine());
-                                         if (pass.NextPass())
-                                         {
-                                             stopwatch.Stop();
-                                             Console.WriteLine(stopwatch.Elapsed);
-                                             Console.ReadLine();
-                                         }
-                                         Console.WriteLine(stopwatch.Elapsed);
-                                         
-                                             dict.ResetCount();
-                                             SendNext(c);
-                                         
-                                         //Chat(index);
-                                     }
-                                     else if (s == "Chunk")
-                                     {
-                                         if (dict.CurrenntChunkIndex == dict.ChunkList.Count)
-                                             {
-                                                 Console.WriteLine("Pass not found");
-                                                 if (pass.NextPass())
-                                                 {
-                                                     stopwatch.Stop();
-                                                     Console.WriteLine(stopwatch.Elapsed);
-                                                     Console.ReadLine();
-                                                 }
-                                             }
-                                             SendNext(c);
-                                         
-                                     }
-                                 }
-                             });
-        }
         public static Task MonitorTaskMultiplePasswords(Client c, int index)
         {
             return Task.Run(() =>
@@ -110,14 +65,6 @@ namespace Master
                 Console.ReadLine();
 
             });
-        }
-
-        public static void SendNext(Client c)
-        {
-            c.StreamWriter.WriteLine(dict.CurrenntChunkIndex);
-            c.StreamWriter.WriteLine(pass.GetPass());
-            Task t = new Task(() => c.StreamWriter.WriteLine(dict.GetNextChunk()));
-            t.Start();
         }
 
         public static void SendNextMultiplePasswords(Client c)
