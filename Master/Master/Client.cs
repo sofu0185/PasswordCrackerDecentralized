@@ -9,12 +9,14 @@ namespace Master
 
     public class Client
     {
-        public Client(TcpClient tcpClient, NetworkStream networkStream, StreamWriter streamWriter, StreamReader streamReader)
+        public Client(TcpClient tcpClient)
         {
             TcpClient = tcpClient;
-            NetworkStream = networkStream;
-            StreamWriter = streamWriter;
-            StreamReader = streamReader;
+            TcpClient.NoDelay = true;
+            NetworkStream = TcpClient.GetStream();
+            StreamWriter = new StreamWriter(NetworkStream);
+            StreamWriter.AutoFlush = true;
+            StreamReader = new StreamReader(NetworkStream);
         }
         public TcpClient TcpClient { get; set; }
 

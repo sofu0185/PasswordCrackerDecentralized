@@ -41,15 +41,9 @@ namespace Master
 
         private static void HandShake(TcpClient client)
         {
-            client.NoDelay = true;
-            NetworkStream networkStream = client.GetStream();
-            StreamReader streamReader = new StreamReader(networkStream);
-            StreamWriter streamWriter = new StreamWriter(networkStream);
-            streamWriter.AutoFlush = true;
-
             int clientId = _clients.Count;
 
-            _clients.Add(clientId, new Client(client, networkStream, streamWriter, streamReader));
+            _clients.Add(clientId, new Client(client));
 
             _commander.Stopwatch.Start();
             _monitorTasks.Add(_commander.MonitorTaskMultiplePasswords(_clients[clientId], clientId));
