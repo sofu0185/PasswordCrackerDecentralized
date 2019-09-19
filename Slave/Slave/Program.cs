@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
+using Common;
+
+using static Common.ConsoleEnhancing;
 
 namespace Slave
 {
@@ -25,13 +28,14 @@ namespace Slave
             {
                 StreamWriter sw = new StreamWriter(ns);
                 StreamReader sr = new StreamReader(ns);
-                BinaryFormatter formatter = new BinaryFormatter();
+                sw.AutoFlush = true;
+                //BinaryFormatter formatter = new BinaryFormatter();
 
                 while (clientSocket.Connected)
                 {
-                    string chunkId = "";
-                    List<UserInfo> usersAndHashedPasswords = new List<UserInfo>();
-                    List<string> dicChunk = new List<string>();
+                    string chunkId = null;
+                    List<UserInfo> usersAndHashedPasswords = null;
+                    List<string> dicChunk = null;
                     try
                     {
                         //chunkId = (string)formatter.Deserialize(ns);
@@ -56,14 +60,14 @@ namespace Slave
                     Console.WriteLine("] and hashed password received.");
                     //WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
 
-                    // Can return success or newChunk
+                    
                     (bool isAnyCracked, List<UserInfo> userInfo) crackingResult = cracking.CheckWords(dicChunk, usersAndHashedPasswords);
                     
                     Console.Write("Did any passwords match in chunk? ");
                     ConsoleColor color = crackingResult.isAnyCracked ? ConsoleColor.Green : ConsoleColor.Red;
                     WriteLineWithColor(crackingResult.isAnyCracked, color);
 
-                    sw.AutoFlush = true;
+                    // Can return success or newChunk
                     if (crackingResult.isAnyCracked)
                     {
                         sw.WriteLine("passwd");
@@ -84,21 +88,5 @@ namespace Slave
                 }
             }
         }
-
-        public static void WriteWithColor(object message, ConsoleColor color)
-        {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            Console.Write(message);
-            Console.ForegroundColor = originalColor;
-        }
-        public static void WriteLineWithColor(object message, ConsoleColor color)
-        {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
-        }
-
     }
 }

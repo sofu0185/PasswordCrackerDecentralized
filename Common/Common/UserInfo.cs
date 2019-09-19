@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Master
+namespace Common
 {
     public class UserInfo
     {
@@ -10,7 +8,7 @@ namespace Master
         public string HashedPassword { get; set; }
         public string PlainTextPassword { get; set; }
 
-        public UserInfo() {}
+        public UserInfo() { }
 
         public UserInfo(string username, string hashedpass, string plainTextPass = null)
         {

@@ -33,7 +33,7 @@ namespace Master
             //SerializeByteChunks();
             SerializeStringChunks();
 
-            Console.WriteLine("Chunks ready");
+            Console.WriteLine("\tChunks ready");
         }
 
         public void ResetCount()

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
+using static Common.ConsoleEnhancing;
+
 namespace Master
 {
     using System.IO;
@@ -15,6 +17,7 @@ namespace Master
         private Passwords pass;
         private Chunks dict;
         public Stopwatch Stopwatch { get; set; }
+        public bool EndOfChunks { get => dict.EndOfChunks; }
 
         public Commander()
         {
@@ -34,19 +37,19 @@ namespace Master
                     string slaveResponse = c.StreamReader.ReadLine();
                     if (!String.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
                     {
+                        Console.Write("Minutes elapsed since start: ");
+                        WriteLineWithColor($"{Stopwatch.Elapsed:%m\\:ss\\:ffff}", ConsoleColor.DarkGray);
+
                         int numberOfPassCracked = int.Parse(c.StreamReader.ReadLine());
                         for(int i = 0; i < numberOfPassCracked; i++)
                         {
-                            Console.WriteLine(c.StreamReader.ReadLine());
+                            WriteLineWithColor($"\t{c.StreamReader.ReadLine()}", ConsoleColor.Yellow);
                         }
+
                         
-                        Console.WriteLine(Stopwatch.Elapsed);
                     }
                 }
                 Stopwatch.Stop();
-                Console.WriteLine(Stopwatch.Elapsed);
-                Console.ReadLine();
-
             });
         }
 

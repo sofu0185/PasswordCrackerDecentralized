@@ -10,6 +10,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Common">
+      <HintPath>..\..\Common\Common\bin\Debug\netcoreapp2.1\Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Text files\passwords.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Common;
 
 namespace Master
 {
@@ -16,7 +17,7 @@ namespace Master
 
             UsersAndPasswordsAsString = JsonConvert.SerializeObject(_list);
 
-            Console.WriteLine("Passwords ready");
+            Console.WriteLine("\tPasswords ready");
         }
     }
 }
