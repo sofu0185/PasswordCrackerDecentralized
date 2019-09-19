@@ -8,8 +8,7 @@ namespace Master
         static void Main(string[] args)
         {
             Commander.Start();
-            //new TempTest().TestOutputAllChunks();
-            
+
             while (true)
             {
                 TcpClient client = Server.AcceptClient().Result;

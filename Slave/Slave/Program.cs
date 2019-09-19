@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using Newtonsoft.Json;
 
 namespace Slave
 {
@@ -23,6 +25,8 @@ namespace Slave
             {
                 StreamWriter sw = new StreamWriter(ns);
                 StreamReader sr = new StreamReader(ns);
+                BinaryFormatter formatter = new BinaryFormatter();
+
 
                 Task<(bool, List<(string, string)>)> crackingTask = null;
 
@@ -31,13 +35,15 @@ namespace Slave
                     CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
                     CancellationToken cct = crackingTokenSource.Token;
 
-                    string chunkId = null;
+                    string chunkId = "";
                     List<(string, string)> hashedPasswords = new List<(string, string)>();
-                    List<string> dicChunk = null;
+                    List<string> dicChunk = new List<string>();
                     try
                     {
+                        //chunkId = (string)formatter.Deserialize(ns);
                         chunkId = sr.ReadLine();
 
+                        //string allPasswords = (string)formatter.Deserialize(ns);
                         string allPasswords = sr.ReadLine();
                         foreach (string user in allPasswords.Split(','))
                         {
@@ -45,9 +51,10 @@ namespace Slave
                             hashedPasswords.Add((tempSplit[0], tempSplit[1]));
                         }
 
-
+                        //dicChunk = (List<string>)formatter.Deserialize(ns);
                         string allWords = sr.ReadLine();
-                        dicChunk = allWords.Split(',').ToList();
+                        dicChunk = JsonConvert.DeserializeObject<List<string>>(allWords);
+
                     }
                     catch (IOException e)
                     {

@@ -7,6 +7,7 @@ namespace Master
 {
     using System.IO;
     using System.Net.Sockets;
+    using System.Runtime.Serialization.Formatters.Binary;
     using System.Threading.Tasks;
 
     public static class Commander
@@ -46,7 +47,7 @@ namespace Master
             {
                 while (!dict.EndOfChunks)
                 {
-                    SendNextMultiplePasswords(c);
+                    SendMultiplePasswords(c);
 
                     string slaveResponse = c.StreamReader.ReadLine();
                     if (!String.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
@@ -67,11 +68,21 @@ namespace Master
             });
         }
 
-        public static void SendNextMultiplePasswords(Client c)
+        public static void SendMultiplePasswords(Client c)
         {
             c.StreamWriter.WriteLine(dict.CurrenntChunkIndex);
             c.StreamWriter.WriteLine(pass.UsersAndPasswordsAsString);
-            c.StreamWriter.WriteLine(dict.GetChunk());
+            c.StreamWriter.WriteLine(dict.GetStringChunk());
+        }
+
+        public static void SendAsBytes(Client c)
+        {
+            NetworkStream ns = c.NetworkStream;
+            BinaryFormatter formatter = new BinaryFormatter();
+
+            formatter.Serialize(ns, dict.CurrenntChunkIndex.ToString());
+            formatter.Serialize(ns, pass.UsersAndPasswordsAsString);
+            ns.Write(dict.GetByteChunk());
         }
     }
 }
