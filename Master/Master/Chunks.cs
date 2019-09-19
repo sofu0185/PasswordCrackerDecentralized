@@ -15,7 +15,7 @@ namespace Master
         private List<String> _fullList = new List<string>();
         public List<List<string>> ChunkList { get; set; }
         public List<string> SerializedStringChunks { get; }
-        public List<byte[]> SerializedByteChunks { get; private set; }
+        public List<byte[]> SerializedByteChunks { get; }
 
         private int chunkSize = Constants.CHUNK_SIZE;
         public int CurrenntChunkIndex { get; private set; } = 0;

@@ -103,7 +103,7 @@ namespace Slave
                     }
                 }
             }
-            bool crackSucceded = crackedPasswords.Count != 0;
+            bool crackSucceded = crackedPasswords.Count > 0;
             return (crackSucceded, crackedPasswords);
         }
 

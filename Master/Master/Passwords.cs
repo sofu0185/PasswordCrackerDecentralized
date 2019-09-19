@@ -5,7 +5,6 @@ namespace Master
 {
     public class Passwords
     { 
-        private int _currentPassIndex;
         private List<UserInfo> _list;
         public string UsersAndPasswordsAsString { get; set; }
         public int UserInfoCount { get; set; }
@@ -20,6 +19,8 @@ namespace Master
                 UsersAndPasswordsAsString += $"{ui.Username}:{ui.HashedPassword},";
             }
             UsersAndPasswordsAsString = UsersAndPasswordsAsString.TrimEnd(',');
+
+            Console.WriteLine("Passwords ready");
         }
     }
 }

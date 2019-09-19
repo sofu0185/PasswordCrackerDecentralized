@@ -7,13 +7,8 @@ namespace Master
     {
         static void Main(string[] args)
         {
-            Commander.Start();
-
-            while (true)
-            {
-                TcpClient client = Server.AcceptClient().Result;
-                Commander.HandShake(client);
-            }
+            Console.WriteLine("Starting server");
+            Server.StartServer();
         }
     }
 }
