@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Master
 {
@@ -13,12 +14,7 @@ namespace Master
         {
             _list = FileHandler.ReadAllPasswords();
 
-            UsersAndPasswordsAsString = "";
-            foreach(UserInfo ui in _list)
-            {
-                UsersAndPasswordsAsString += $"{ui.Username}:{ui.HashedPassword},";
-            }
-            UsersAndPasswordsAsString = UsersAndPasswordsAsString.TrimEnd(',');
+            UsersAndPasswordsAsString = JsonConvert.SerializeObject(_list);
 
             Console.WriteLine("Passwords ready");
         }

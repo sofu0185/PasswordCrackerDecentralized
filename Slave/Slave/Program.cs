@@ -27,16 +27,10 @@ namespace Slave
                 StreamReader sr = new StreamReader(ns);
                 BinaryFormatter formatter = new BinaryFormatter();
 
-
-                Task<(bool, List<(string, string)>)> crackingTask = null;
-
                 while (clientSocket.Connected)
                 {
-                    CancellationTokenSource crackingTokenSource = new CancellationTokenSource();
-                    CancellationToken cct = crackingTokenSource.Token;
-
                     string chunkId = "";
-                    List<(string, string)> hashedPasswords = new List<(string, string)>();
+                    List<UserInfo> usersAndHashedPasswords = new List<UserInfo>();
                     List<string> dicChunk = new List<string>();
                     try
                     {
@@ -44,12 +38,7 @@ namespace Slave
                         chunkId = sr.ReadLine();
 
                         //string allPasswords = (string)formatter.Deserialize(ns);
-                        string allPasswords = sr.ReadLine();
-                        foreach (string user in allPasswords.Split(','))
-                        {
-                            string[] tempSplit = user.Split(':');
-                            hashedPasswords.Add((tempSplit[0], tempSplit[1]));
-                        }
+                        usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine());
 
                         //dicChunk = (List<string>)formatter.Deserialize(ns);
                         string allWords = sr.ReadLine();
@@ -68,47 +57,30 @@ namespace Slave
                     //WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
 
                     // Can return success or newChunk
-                    crackingTask = Task.Run(() => cracking.CheckWords(dicChunk, hashedPasswords), cct);
+                    (bool isAnyCracked, List<UserInfo> userInfo) crackingResult = cracking.CheckWords(dicChunk, usersAndHashedPasswords);
+                    
+                    Console.Write("Did any passwords match in chunk? ");
+                    ConsoleColor color = crackingResult.isAnyCracked ? ConsoleColor.Green : ConsoleColor.Red;
+                    WriteLineWithColor(crackingResult.isAnyCracked, color);
 
-                    //Task t = Task.Run(() =>
-                    //{
-                    //    string extraMessage = sr.ReadLine();
-                    //    if (extraMessage == "password")
-                    //    {
-                    //        crackingTokenSource.Cancel();
-                    //    }
-
-                    //});
-                    crackingTask.Wait();
-                    //tcpTokenSource.Cancel();
-                
-
-                    if (crackingTask.IsCompletedSuccessfully)
+                    sw.AutoFlush = true;
+                    if (crackingResult.isAnyCracked)
                     {
-                        Console.Write("Did any passwords match in chunk? ");
-                        ConsoleColor color = crackingTask.Result.Item1 ? ConsoleColor.Green : ConsoleColor.Red;
-                        WriteLineWithColor(crackingTask.Result.Item1, color);
-
-                        sw.AutoFlush = true;
-                        if (crackingTask.Result.Item1)
+                        sw.WriteLine("passwd");
+                        sw.WriteLine(crackingResult.userInfo.Count);
+                        foreach (UserInfo userAndPass in crackingResult.userInfo)
                         {
-                            sw.WriteLine("passwd");
-                            sw.WriteLine(crackingTask.Result.Item2.Count);
-                            foreach ((string name, string pass) userAndPass in crackingTask.Result.Item2)
-                            {
-                                string userAndPassAsString = $"{userAndPass.name}: {userAndPass.pass}";
-                                sw.WriteLine(userAndPassAsString);
-                                WriteLineWithColor($"\t{userAndPassAsString}", ConsoleColor.Yellow);
-                            }
+                            string userAndPassAsString = $"{userAndPass.Username}: {userAndPass.PlainTextPassword}";
+                            sw.WriteLine(userAndPassAsString);
+                            WriteLineWithColor($"\t{userAndPassAsString}", ConsoleColor.Yellow);
                         }
-                        else
-                        {
-                            sw.WriteLine("Chunk");
-                        }
-
-                        Console.WriteLine();
-                                               
                     }
+                    else
+                    {
+                        sw.WriteLine("Chunk");
+                    }
+
+                    Console.WriteLine();
                 }
             }
         }
