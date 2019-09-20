@@ -16,7 +16,7 @@ namespace Slave
     class Program
     {
         public const int PORT = 6789;
-        public const string IPADDRESS = "localhost";
+        public const string IPADDRESS = "192.168.103.178";
         private static int _logicalCores = Environment.ProcessorCount;
         private static List<List<UserInfo>> _crackingResults;
         private static List<Task<List<UserInfo>>> _crackingTasks;
