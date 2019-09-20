@@ -17,9 +17,13 @@ namespace Slave
     {
         public const int PORT = 6789;
         public const string IPADDRESS = "localhost";
-        
+        private static int _logicalCores = Environment.ProcessorCount;
+        private static List<List<UserInfo>> _crackingResults;
+        private static List<Task<List<UserInfo>>> _crackingTasks;
         static void Main(string[] args)
         {
+            Console.WriteLine("Number Of Logical Processors: {0}", _logicalCores);
+
             Cracking cracking = new Cracking();
 
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
@@ -36,6 +40,7 @@ namespace Slave
                     string chunkId = null;
                     List<UserInfo> usersAndHashedPasswords = null;
                     List<string> dicChunk = null;
+                    List<List<string>> listDicChunks = new List<List<string>>();
                     try
                     {
                         //chunkId = (string)formatter.Deserialize(ns);
@@ -43,7 +48,7 @@ namespace Slave
 
                         //string allPasswords = (string)formatter.Deserialize(ns);
                         usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine());
-
+                        
                         //dicChunk = (List<string>)formatter.Deserialize(ns);
                         string allWords = sr.ReadLine();
                         dicChunk = JsonConvert.DeserializeObject<List<string>>(allWords);
@@ -55,13 +60,67 @@ namespace Slave
                             throw e;
                     }
 
+                    int count = 0;
+                    List<string> chunk = new List<string>();
+                    foreach (string s in dicChunk)
+                    {
+                        if (count == dicChunk.Count / _logicalCores)
+                        {
+                            listDicChunks.Add(chunk);
+                            chunk = new List<string>();
+                            count = 0;
+                        }
+                        chunk.Add(s);
+                        count++;
+                    }
+                    listDicChunks.Add(chunk);
+
                     Console.Write($"Chunk [");
                     WriteWithColor(chunkId, ConsoleColor.DarkGray);
                     Console.WriteLine("] and hashed password received.");
                     //WriteLineWithColor(hashedPassword, ConsoleColor.Gray);
+                    _crackingResults = new List<List<UserInfo>>();
+                    _crackingTasks = new List<Task<List<UserInfo>>>();
+                    Task<List<UserInfo>> MethodWithParameter(int b)
+                    {
+                        Task<List<UserInfo>> a = new Task<List<UserInfo>>((() =>
+                                                                           {
+                                                                               Cracking c = new Cracking();
+                                                                               return c
+                                                                                      .CheckWords(listDicChunks[b],
+                                                                                                  usersAndHashedPasswords)
+                                                                                      .Item2;}));
+                        a.Start();
+                        return a;
+                    }
+                    for (int i = 0; i < listDicChunks.Count; i++)
+                    {
+                        Task<List<UserInfo>> a = MethodWithParameter(i);
+                        
+                        _crackingTasks.Add(a);
+                        
+                    }
 
-                    
-                    (bool isAnyCracked, List<UserInfo> userInfo) crackingResult = cracking.CheckWords(dicChunk, usersAndHashedPasswords);
+                    foreach (var t in _crackingTasks)
+                    {
+                        t.Wait();
+                        _crackingResults.Add(t.Result);
+                    }
+                    List<UserInfo> crackedUsers = new List<UserInfo>();
+                    bool succes = false;
+                    foreach (var result in _crackingResults)
+                    {
+                        if (result.Count > 0)
+                        {
+                            succes = true;
+                            foreach (var userInfo in result)
+                            {
+                                crackedUsers.Add(userInfo);
+                            }
+                        }
+                    }
+
+                    (bool isAnyCracked, List<UserInfo> userInfo) crackingResult = (succes, crackedUsers);
                     
                     Console.Write("Did any passwords match in chunk? ");
                     ConsoleColor color = crackingResult.isAnyCracked ? ConsoleColor.Green : ConsoleColor.Red;
