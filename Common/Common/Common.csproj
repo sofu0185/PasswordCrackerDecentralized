@@ -1,7 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Common">
+      <HintPath>bin\Debug\netcoreapp2.1\Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

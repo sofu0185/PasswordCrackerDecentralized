@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <Reference Include="Common">
-      <HintPath>..\..\Common\Common\bin\Debug\netcoreapp2.1\Common.dll</HintPath>
+      <HintPath>..\..\Common dll\Common.dll</HintPath>
     </Reference>
   </ItemGroup>
 
