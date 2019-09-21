@@ -28,8 +28,8 @@ namespace Master
             // Read all words from file and split them into chunks
             _chunkArray = SplitIntoChunks(FileHandler.ReadAllWordsInDictionarySpan());
 
-            SerializedStringChunks = new List<string>();
-            SerializeStringChunks();
+            SerializedStringChunks = SerializeChunks();
+
 
             Console.WriteLine("\tChunks ready");
         }
@@ -59,14 +59,15 @@ namespace Master
             return result;
         }
 
-
-        private void SerializeStringChunks()
+        private List<string> SerializeChunks()
         {
+            List<string> result = new List<string>();
             foreach (string[] chunk in _chunkArray)
             {
                 string s = JsonConvert.SerializeObject(chunk);
-                SerializedStringChunks.Add(s);
+                result.Add(s);
             }
+            return result;
         }
 
         public string GetStringChunk()
@@ -78,12 +79,6 @@ namespace Master
                 EndOfChunks = true;
             }
             return SerializedStringChunks[i];
-        }
-
-        public void ResetCount()
-        {
-            CurrenntChunkIndex = 0;
-
-        }        
+        }       
     }
 }

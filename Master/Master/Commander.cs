@@ -20,14 +20,14 @@ namespace Master
     /// </summary>
     public class Commander
     {
-        private Passwords _userHandler;
+        private Passwords _passwordHandler;
         private Chunks _chunkHandler;
         public Stopwatch Stopwatch { get; set; }
         public bool EndOfChunks { get => _chunkHandler.EndOfChunks; }
 
         public Commander()
         {
-            _userHandler = new Passwords();
+            _passwordHandler = new Passwords();
             _chunkHandler = new Chunks();
             Stopwatch = new Stopwatch();
         }
@@ -50,6 +50,9 @@ namespace Master
                     while (!_chunkHandler.EndOfChunks)
                     {
                         CommunicateWithClient(client, cancellationToken);
+
+                        // Checks if task has been canceled since last chunk was send
+                        cancellationToken.ThrowIfCancellationRequested();
                     }
                 }
                 catch(Exception e)
@@ -83,7 +86,7 @@ namespace Master
         private void WriteToClient(Client client)
         {
             client.StreamWriter.WriteLine(_chunkHandler.CurrenntChunkIndex);
-            client.StreamWriter.WriteLine(_userHandler.UsersAndPasswordsAsString);
+            client.StreamWriter.WriteLine(_passwordHandler.UsersAndPasswordsAsString);
             client.StreamWriter.WriteLine(_chunkHandler.GetStringChunk());
         }
 
@@ -116,11 +119,11 @@ namespace Master
 
                 List<UserInfo> results = JsonConvert.DeserializeObject<List<UserInfo>>(client.StreamReader.ReadLine());
                 foreach (UserInfo u in results)
+                {
+                    _passwordHandler.SetPlainTextPassword(u.Id, u.PlainTextPassword);
                     WriteLineWithColor($"\t{u}", ConsoleColor.Yellow);
+                }
             }
-
-            // Checks if task has been canceled while waiting for a response from slave
-            cancellationToken.ThrowIfCancellationRequested();
         }
     }
 }

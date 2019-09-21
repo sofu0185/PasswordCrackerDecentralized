@@ -7,17 +7,21 @@ namespace Master
 {
     public class Passwords
     { 
-        private List<UserInfo> _list;
+        public List<UserInfo> PasswordList { get; set; }
         public string UsersAndPasswordsAsString { get; set; }
-        public int UserInfoCount { get; set; }
 
         public Passwords()
         {
-            _list = FileHandler.ReadAllPasswords();
+            PasswordList = FileHandler.ReadAllPasswords();
 
-            UsersAndPasswordsAsString = JsonConvert.SerializeObject(_list);
+            UsersAndPasswordsAsString = JsonConvert.SerializeObject(PasswordList);
 
             Console.WriteLine("\tPasswords ready");
+        }
+
+        public void SetPlainTextPassword(int id, string plainTextPassword)
+        {
+            PasswordList.Find(x => x.Id == id).PlainTextPassword = plainTextPassword;
         }
     }
 }
