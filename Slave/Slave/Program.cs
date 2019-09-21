@@ -22,9 +22,7 @@ namespace Slave
         static void Main(string[] args)
         {
             Console.WriteLine("Number Of Logical Processors: {0}", LOGICALCORES);
-
-            Cracking cracking = new Cracking();
-
+            
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
 
             using (NetworkStream ns = clientSocket.GetStream())
@@ -52,6 +50,8 @@ namespace Slave
                     {
                         if (e.InnerException.GetType() != typeof(SocketException))
                             throw e;
+                        else
+                            WriteLineWithColor($"\nMaster canceled all slaves due to an error!", ConsoleColor.Red);
                     }
 
                     if (!string.IsNullOrWhiteSpace(chunkId))

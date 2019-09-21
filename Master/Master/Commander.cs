@@ -10,6 +10,7 @@ namespace Master
     using System.IO;
     using System.Net.Sockets;
     using System.Runtime.Serialization.Formatters.Binary;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class Commander
@@ -26,31 +27,53 @@ namespace Master
             dict = new Chunks();
         }
 
-        public Task MonitorTaskMultiplePasswords(Client c, int index)
+        public Task MonitorTaskMultiplePasswords(Client c, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
-                while (!dict.EndOfChunks)
+                cancellationToken.ThrowIfCancellationRequested();
+                try
                 {
-                    SendMultiplePasswords(c);
-
-                    string slaveResponse = c.StreamReader.ReadLine();
-                    if (!String.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
+                    while (!dict.EndOfChunks)
                     {
-                        Console.Write("Minutes elapsed since start: ");
-                        WriteLineWithColor($"{Stopwatch.Elapsed:%m\\:ss\\:ffff}", ConsoleColor.DarkGray);
+                        SendMultiplePasswords(c);
 
-                        int numberOfPassCracked = int.Parse(c.StreamReader.ReadLine());
-                        for(int i = 0; i < numberOfPassCracked; i++)
+                        string slaveResponse = null;
+                        try
                         {
-                            WriteLineWithColor($"\t{c.StreamReader.ReadLine()}", ConsoleColor.Yellow);
+                            slaveResponse = c.StreamReader.ReadLine();
+                        }
+                        catch (IOException e)
+                        {
+                            if (e.InnerException.GetType() == typeof(SocketException))
+                                throw new Exception("!!! Slave disconnected !!!");
+                            else
+                                throw e;
                         }
 
-                        
+                        // Checks if task has been canceled while waiting for a response from slave
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (!String.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
+                        {
+                            Console.Write("Minutes elapsed since start: ");
+                            WriteLineWithColor($"{Stopwatch.Elapsed:%m\\:ss\\:ffff}", ConsoleColor.DarkGray);
+
+                            int numberOfPassCracked = int.Parse(c.StreamReader.ReadLine());
+                            for (int i = 0; i < numberOfPassCracked; i++)
+                            {
+                                WriteLineWithColor($"\t{c.StreamReader.ReadLine()}", ConsoleColor.Yellow);
+                            }
+                        }
                     }
                 }
-                Stopwatch.Stop();
-            });
+                finally
+                {
+                    Stopwatch.Stop();
+                    c.TcpClient.Close();
+                }
+                
+            }, cancellationToken);
         }
 
         public void SendMultiplePasswords(Client c)
