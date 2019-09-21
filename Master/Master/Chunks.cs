@@ -9,23 +9,24 @@ namespace Master
 {
     /// <summary>A class handling inputting a word dictionary in txt format and outputting a splitted dictionary in chunks (list consisting of strings). 
     /// </summary>
-    class Chunks
+    public class Chunks
     {
-        private readonly List<string> _fullList = new List<string>();
-        private readonly int _chunkSize = Constants.CHUNK_SIZE;
+        private readonly int _chunkSize;
+        //private List<List<string>> _chunkList;
+        private List<string[]> _chunkArray;
 
-        public List<List<string>> ChunkList { get; private set; }
         public List<string> SerializedStringChunks { get; }
         public int CurrenntChunkIndex { get; private set; }
-        public int CurrentChunkSize { get => ChunkList[CurrenntChunkIndex].Count; }
+        public int CurrentChunkSize { get => _chunkArray[CurrenntChunkIndex].Length; }
         public bool EndOfChunks { get; private set; }
 
         public Chunks()
         {
+            _chunkSize = Constants.CHUNK_SIZE;
             CurrenntChunkIndex = 0;
-            _fullList = FileHandler.ReadAllWordsInDictionary();
-            ChunkList = new List<List<string>>();
-            SplitChunks(_fullList);
+
+            // Read all words from file and split them into chunks
+            _chunkArray = SplitIntoChunks(FileHandler.ReadAllWordsInDictionarySpan());
 
             SerializedStringChunks = new List<string>();
             SerializeStringChunks();
@@ -35,28 +36,34 @@ namespace Master
 
         /// <summary>Splits full list of words from dictionary into chunks (a list consisting of strings)  
         /// </summary>
-        private void SplitChunks(List<string> listOfWords)
+        public List<string[]> SplitIntoChunks(Span<string> listOfWords)
         {
-            int count = 0;
-            //Ny chunk
-            List<string> chunk = new List<string>();
-            foreach (string s in listOfWords)
+            List<string[]> result = new List<string[]>();
+
+            // Calculate amount of chunks
+            int lenght = listOfWords.Length / _chunkSize;
+            // Checks to see if there are a non full chunck, if so adds one more to the length
+            lenght += listOfWords.Length % _chunkSize != 0 ? 1 : 0;
+
+
+            for(int i = 0; i < lenght; i++)
             {
-                if (count == _chunkSize)
-                {
-                    ChunkList.Add(chunk);
-                    chunk = new List<string>();
-                    count = 0;
-                }
-                chunk.Add(s);
-                count++;
+                int sliceStart = i * _chunkSize;
+
+                // if last chunk add all remaining words to it
+                if (i == lenght - 1)
+                    result.Add(listOfWords.Slice(sliceStart).ToArray());
+                else
+                    result.Add(listOfWords.Slice(sliceStart, _chunkSize).ToArray());
             }
-            ChunkList.Add(chunk);
+
+            return result;
         }
+
 
         private void SerializeStringChunks()
         {
-            foreach (var chunk in ChunkList)
+            foreach (string[] chunk in _chunkArray)
             {
                 string s = JsonConvert.SerializeObject(chunk);
                 SerializedStringChunks.Add(s);

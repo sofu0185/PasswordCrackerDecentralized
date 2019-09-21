@@ -9,9 +9,9 @@ namespace Master
 {
     public static class FileHandler
     {
-        public static List<string> ReadAllWordsInDictionary()
+        public static Span<string> ReadAllWordsInDictionarySpan()
         {
-            return File.ReadAllLines(Constants.DICTIONARY_PATH).ToList();
+            return File.ReadAllLines(Constants.DICTIONARY_PATH);
         }
 
         public static List<UserInfo> ReadAllPasswords()

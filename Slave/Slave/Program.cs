@@ -24,7 +24,6 @@ namespace Slave
             Console.WriteLine("Number Of Logical Processors: {0}", LOGICALCORES);
             
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
-
             using (NetworkStream ns = clientSocket.GetStream())
             {
                 StreamWriter sw = new StreamWriter(ns);
@@ -118,47 +117,16 @@ namespace Slave
 
         private static (bool, List<UserInfo>) CheckMultipleWordsAtOnce(List<List<string>> subChunks, List<UserInfo> usersAndHashedPasswords)
         {
-            List<Task<List<UserInfo>>> _crackingTasks = new List<Task<List<UserInfo>>>();
-
-            Task<List<UserInfo>> MethodWithParameter(int b)
-            {
-                Task<List<UserInfo>> a = new Task<List<UserInfo>>((() =>
-                {
-                    Cracking c = new Cracking();
-                    return c.CheckWords(subChunks[b], usersAndHashedPasswords).Item2;
-                }));
-                a.Start();
-                return a;
-            }
-            for (int i = 0; i < subChunks.Count; i++)
-            {
-                Task<List<UserInfo>> a = MethodWithParameter(i);
-
-                _crackingTasks.Add(a);
-            }
-
-            List<List<UserInfo>> _crackingResults = new List<List<UserInfo>>();
-
-            foreach (var t in _crackingTasks)
-            {
-                t.Wait();
-                _crackingResults.Add(t.Result);
-            }
             List<UserInfo> crackedUsers = new List<UserInfo>();
-            bool succes = false;
-            foreach (var result in _crackingResults)
+            Parallel.ForEach(subChunks, subChunk =>
             {
-                if (result.Count > 0)
-                {
-                    succes = true;
-                    foreach (var userInfo in result)
-                    {
-                        crackedUsers.Add(userInfo);
-                    }
-                }
-            }
+                Cracking c = new Cracking();
+                // Check chunk of words for password matches
+                List<UserInfo> result = c.CheckWords(subChunk, usersAndHashedPasswords);
+                crackedUsers.AddRange(result);
+            });
 
-            return (succes, crackedUsers);
+            return (crackedUsers.Count > 0, crackedUsers);
         }
     }
 }

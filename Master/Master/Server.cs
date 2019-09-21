@@ -85,8 +85,7 @@ namespace Master
             if (cts.IsCancellationRequested)
                 WriteLineWithColor($"\n{errorMessage}\n", ConsoleColor.Red);
 
-            Console.WriteLine($"Total time: {_commander.Stopwatch.Elapsed}");
-            Console.ReadLine();
+            Console.WriteLine($"\nTotal time: {_commander.Stopwatch.Elapsed}");
         }
 
         /// <summary>

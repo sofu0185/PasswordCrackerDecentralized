@@ -16,8 +16,6 @@ namespace Slave
         /// </summary>
         private readonly HashAlgorithm _messageDigest;
 
-        private static readonly Converter<char, byte> Converter = CharToByte;
-
         public Cracking()
         {
             _messageDigest = new SHA1CryptoServiceProvider();
@@ -31,7 +29,7 @@ namespace Slave
         /// <param name="wordsChunk">A chunk of words from the dictionary</param>
         /// <param name="encryptedPasswordsBase64">List of names and encrypted password pairs</param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        public (bool, List<UserInfo>) CheckWords(List<string> wordsChunk, List<UserInfo> encryptedPasswordsBase64)
+        public List<UserInfo> CheckWords(List<string> wordsChunk, List<UserInfo> encryptedPasswordsBase64)
         {
             List<(UserInfo, byte[])> encryptedPasswords = new List<(UserInfo, byte[])>();
             foreach (UserInfo encryptedPasswordBase64 in encryptedPasswordsBase64)
@@ -43,69 +41,47 @@ namespace Slave
 
             foreach (string dictionaryEntry in wordsChunk)
             {
-                String possiblePassword = dictionaryEntry.ToLower();
-                (bool, List<UserInfo>) partialResult = CheckSingleVariations(encryptedPasswords, possiblePassword);
-                if (partialResult.Item1)
-                {
-                    crackedPasswords.AddRange(partialResult.Item2);
-                }
+                // Check for exact match
+                String possiblePassword = dictionaryEntry;
+                crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePassword));
 
+                // Check for uppercase
                 String possiblePasswordUpperCase = dictionaryEntry.ToUpper();
-                (bool, List<UserInfo>) partialResultUpperCase = CheckSingleVariations(encryptedPasswords, possiblePasswordUpperCase);
-                if (partialResultUpperCase.Item1)
-                {
-                    crackedPasswords.AddRange(partialResultUpperCase.Item2);
-                }
+                crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePasswordUpperCase));
 
+                // Check for capitalization
                 String possiblePasswordCapitalized = StringUtilities.Capitalize(dictionaryEntry);
-                (bool, List<UserInfo>) partialResultCapitalized = CheckSingleVariations(encryptedPasswords, possiblePasswordCapitalized);
-                if (partialResultCapitalized.Item1)
-                {
-                    crackedPasswords.AddRange(partialResultCapitalized.Item2);
-                }
+                crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePasswordCapitalized));
 
+                // Check for reverse
                 String possiblePasswordReverse = StringUtilities.Reverse(dictionaryEntry);
-                (bool, List<UserInfo>) partialResultReverse = CheckSingleVariations(encryptedPasswords, possiblePasswordReverse);
-                if (partialResultReverse.Item1)
-                {
-                    crackedPasswords.AddRange(partialResultReverse.Item2);
-                }
+                crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePasswordReverse));
 
+                // Check for end digits between 0 and 99
                 for (int i = 0; i < 100; i++)
                 {
                     String possiblePasswordEndDigit = dictionaryEntry + i;
-                    (bool, List<UserInfo>) partialResultEndDigit = CheckSingleVariations(encryptedPasswords, possiblePasswordEndDigit);
-                    if (partialResultEndDigit.Item1)
-                    {
-                        crackedPasswords.AddRange(partialResultEndDigit.Item2);
-                    }
+                    crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePasswordEndDigit));
                 }
 
+                // Check for leading digits between 0 and 99
                 for (int i = 0; i < 100; i++)
                 {
                     String possiblePasswordStartDigit = i + dictionaryEntry;
-                    (bool, List<UserInfo>) partialResultStartDigit = CheckSingleVariations(encryptedPasswords, possiblePasswordStartDigit);
-                    if (partialResultStartDigit.Item1)
-                    {
-                        crackedPasswords.AddRange(partialResultStartDigit.Item2);
-                    }
+                    crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePasswordStartDigit));
                 }
 
+                // Check for leading and end digits between 0 and 9
                 for (int i = 0; i < 10; i++)
                 {
                     for (int j = 0; j < 10; j++)
                     {
                         String possiblePasswordStartEndDigit = i + dictionaryEntry + j;
-                        (bool, List<UserInfo>) partialResultStartEndDigit = CheckSingleVariations(encryptedPasswords, possiblePasswordStartEndDigit);
-                        if (partialResultStartEndDigit.Item1)
-                        {
-                            crackedPasswords.AddRange(partialResultStartEndDigit.Item2);
-                        }
+                        crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePasswordStartEndDigit));
                     }
                 }
             }
-            bool crackSucceded = crackedPasswords.Count > 0;
-            return (crackSucceded, crackedPasswords);
+            return crackedPasswords;
         }
 
         /// <summary>
@@ -114,30 +90,27 @@ namespace Slave
         /// <param name="encryptedPasswords">List of encrypted passwords from the password file</param>
         /// <param name="possiblePassword"></param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        private (bool, List<UserInfo>) CheckSingleVariations(List<(UserInfo, byte[])> encryptedPasswords, string possiblePassword)
+        private List<UserInfo> CheckSingleVariations(List<(UserInfo, byte[])> encryptedPasswords, string possiblePassword)
         {
             //HASH VALUE
             byte[] possibleEncryptedPasswordByte = HashPossiblePassword(possiblePassword);
 
-            bool passwordFound = false;
             List<UserInfo> crackedPaswords = new List<UserInfo>();
 
-            foreach((UserInfo userInfo, byte[] passByte) encryptedPassword in encryptedPasswords)
+            foreach ((UserInfo userInfo, byte[] passByte) encryptedPassword in encryptedPasswords)
             {
-                if (CompareBytes(encryptedPassword.passByte, possibleEncryptedPasswordByte))  //compares byte arrays
+                if (CompareBytesArrays(encryptedPassword.passByte, possibleEncryptedPasswordByte))  //compares byte arrays
                 {
                     encryptedPassword.userInfo.PlainTextPassword = possiblePassword;
                     crackedPaswords.Add(encryptedPassword.userInfo);
-                    passwordFound = true;
                 }
             }
-            return (passwordFound, crackedPaswords);
+            return crackedPaswords;
         }
 
         private byte[] HashPossiblePassword(string possiblePassword)
         {
-            char[] charArray = possiblePassword.ToCharArray();
-            byte[] passwordAsBytes = Array.ConvertAll(charArray, Converter);
+            byte[] passwordAsBytes = Encoding.ASCII.GetBytes(possiblePassword);
             return _messageDigest.ComputeHash(passwordAsBytes);
         }
 
@@ -147,13 +120,13 @@ namespace Slave
         /// <param name="firstArray"></param>
         /// <param name="secondArray"></param>
         /// <returns></returns>
-        private static bool CompareBytes(IList<byte> firstArray, IList<byte> secondArray)
+        private bool CompareBytesArrays(byte[] firstArray, byte[] secondArray)
         {
-            if (firstArray.Count != secondArray.Count)
+            if (firstArray.Length != secondArray.Length)
             {
                 return false;
             }
-            for (int i = 0; i < firstArray.Count; i++)
+            for (int i = 0; i < firstArray.Length; i++)
             {
                 if (firstArray[i] != secondArray[i])
                     return false;
@@ -161,15 +134,5 @@ namespace Slave
             return true;
         }
 
-        /// <summary>
-        /// Converting a char to a byte can be done in many ways.
-        /// This is one way ...
-        /// </summary>
-        /// <param name="ch"></param>
-        /// <returns></returns>
-        private static byte CharToByte(char ch)
-        {
-            return Convert.ToByte(ch);
-        }
     }
 }
