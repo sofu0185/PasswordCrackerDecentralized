@@ -68,11 +68,8 @@ namespace Master
 
             // Cancel all other tasks if one fails
             string errorMessage = null;
-            while (_monitorTasks.Count > 0)
+            Task.Factory.ContinueWhenAny(_monitorTasks.ToArray(), completedTask =>
             {
-                Task<Task> t = Task.WhenAny(_monitorTasks);
-                Task completedTask = t.Result;
-                _monitorTasks.Remove(completedTask);
                 if (completedTask.IsFaulted)
                 {
                     int eAmount = completedTask.Exception.InnerExceptions.Count;
@@ -80,12 +77,16 @@ namespace Master
 
                     cts.Cancel();
                 }
-            }
+            }).Wait();
+
             // Write error message when all tasks have been canceled
             if (cts.IsCancellationRequested)
                 WriteLineWithColor($"\n{errorMessage}\n", ConsoleColor.Red);
+            else
+                Task.WaitAll(_monitorTasks.ToArray());
 
-            Console.WriteLine($"\nTotal time: {_commander.Stopwatch.Elapsed}");
+            Console.Write($"\nTotal time: ");
+            WriteLineWithColor(_commander.Stopwatch.Elapsed, ConsoleColor.Yellow);
         }
 
         /// <summary>

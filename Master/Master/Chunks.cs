@@ -41,17 +41,16 @@ namespace Master
             List<string[]> result = new List<string[]>();
 
             // Calculate amount of chunks
-            int lenght = listOfWords.Length / _chunkSize;
-            // Checks to see if there are a non full chunck, if so adds one more to the length
-            lenght += listOfWords.Length % _chunkSize != 0 ? 1 : 0;
+            int numberOfChunks = listOfWords.Length / _chunkSize;
+            // Checks to see if there are a non full chunck, if so adds one more to the number of chunks
+            numberOfChunks += listOfWords.Length % _chunkSize != 0 ? 1 : 0;
 
-
-            for(int i = 0; i < lenght; i++)
+            for(int i = 0; i < numberOfChunks; i++)
             {
                 int sliceStart = i * _chunkSize;
 
                 // if last chunk add all remaining words to it
-                if (i == lenght - 1)
+                if (i == numberOfChunks - 1)
                     result.Add(listOfWords.Slice(sliceStart).ToArray());
                 else
                     result.Add(listOfWords.Slice(sliceStart, _chunkSize).ToArray());

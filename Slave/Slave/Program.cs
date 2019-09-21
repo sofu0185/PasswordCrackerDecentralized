@@ -34,27 +34,28 @@ namespace Slave
                 {
                     string chunkId = null;
                     List<UserInfo> usersAndHashedPasswords = null;
-                    List<string> dicChunk = null;
+                    string[] dicChunk = null;
                     try
                     {
                         chunkId = sr.ReadLine();
 
-                        usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine());
+                        usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine() ?? "");
                         
-                        dicChunk = JsonConvert.DeserializeObject<List<string>>(sr.ReadLine());
+                        dicChunk = JsonConvert.DeserializeObject<string[]>(sr.ReadLine() ?? "");
 
                     }
                     catch (IOException e)
                     {
-                        if (e.InnerException.GetType() != typeof(SocketException))
-                            throw e;
-                        else
+                        if (e.InnerException.GetType() == typeof(SocketException))
                             WriteLineWithColor($"\nMaster closed connection due to an error!", ConsoleColor.Red);
+                        else
+                            throw e;
+
                     }
 
                     if (!string.IsNullOrWhiteSpace(chunkId))
                     {
-                        List<List<string>> subChunks = SplitIntoSubchunks(dicChunk, LOGICALCORES);
+                        List<string[]> subChunks = SplitIntoSubchunks(dicChunk, LOGICALCORES);
 
                         Console.Write($"Chunk [");
                         WriteWithColor(chunkId, ConsoleColor.DarkGray);
@@ -67,6 +68,8 @@ namespace Slave
                         WriteLineWithColor(crackingResult.isAnyCracked, color);
 
                         ResponseToMaster(sw, crackingResult.isAnyCracked, crackingResult.crackedPasswords);
+
+                        Console.WriteLine();
                     }
                 }
             }
@@ -77,14 +80,13 @@ namespace Slave
             // response "passwd" to server if any passwords was cracked
             if (isAnyCracked)
             {
-                sw.WriteLine("passwd");
-                sw.WriteLine(crackedPasswords.Count);
                 foreach (UserInfo userAndPass in crackedPasswords)
                 {
-                    string userAndPassAsString = $"{userAndPass.Username}: {userAndPass.PlainTextPassword}";
-                    sw.WriteLine(userAndPassAsString);
-                    WriteLineWithColor($"\t{userAndPassAsString}", ConsoleColor.Yellow);
+                    WriteLineWithColor($"\t{userAndPass}", ConsoleColor.Yellow);
                 }
+
+                sw.WriteLine("passwd");
+                sw.WriteLine(JsonConvert.SerializeObject(crackedPasswords));
             }
             // else ask for new chunks
             else
@@ -92,30 +94,25 @@ namespace Slave
                 sw.WriteLine("Chunk");
             }
 
-            Console.WriteLine();
         }
 
-        private static List<List<string>> SplitIntoSubchunks(List<string> chunk, int subchunkAmount)
+        private static List<string[]> SplitIntoSubchunks(Span<string> chunk, int subchunkAmount)
         {
-            List<List<string>> result = new List<List<string>>();
-            int count = 0;
-            List<string> subChunk = new List<string>();
-            foreach (string s in chunk)
+            List<string[]> result = new List<string[]>();
+
+            int subchunkLength = chunk.Length / subchunkAmount;
+            for(int i = 0; i < subchunkAmount; i++)
             {
-                if (count == chunk.Count / LOGICALCORES)
-                {
-                    result.Add(subChunk);
-                    subChunk = new List<string>();
-                    count = 0;
-                }
-                subChunk.Add(s);
-                count++;
+                int sliceStart = i * subchunkLength;
+                if (i == subchunkAmount - 1)
+                    result.Add(chunk.Slice(sliceStart).ToArray());
+                else
+                    result.Add(chunk.Slice(sliceStart, subchunkLength).ToArray());
             }
-            result.Add(subChunk);
             return result;
         }
 
-        private static (bool, List<UserInfo>) CheckMultipleWordsAtOnce(List<List<string>> subChunks, List<UserInfo> usersAndHashedPasswords)
+        private static (bool, List<UserInfo>) CheckMultipleWordsAtOnce(List<string[]> subChunks, List<UserInfo> usersAndHashedPasswords)
         {
             List<UserInfo> crackedUsers = new List<UserInfo>();
             Parallel.ForEach(subChunks, subChunk =>

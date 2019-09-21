@@ -15,5 +15,10 @@ namespace Common
             Username = username;
             HashedPassword = hashedpass;
         }
+
+        public override string ToString()
+        {
+            return $"{Username}: {PlainTextPassword}";
+        }
     }
 }

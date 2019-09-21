@@ -29,7 +29,7 @@ namespace Slave
         /// <param name="wordsChunk">A chunk of words from the dictionary</param>
         /// <param name="encryptedPasswordsBase64">List of names and encrypted password pairs</param>
         /// <returns>A list of (username, readable password) pairs. The list might be empty</returns>
-        public List<UserInfo> CheckWords(List<string> wordsChunk, List<UserInfo> encryptedPasswordsBase64)
+        public List<UserInfo> CheckWords(string[] wordsChunk, List<UserInfo> encryptedPasswordsBase64)
         {
             List<(UserInfo, byte[])> encryptedPasswords = new List<(UserInfo, byte[])>();
             foreach (UserInfo encryptedPasswordBase64 in encryptedPasswordsBase64)
@@ -39,8 +39,9 @@ namespace Slave
 
             List<UserInfo> crackedPasswords = new List<UserInfo>();
 
-            foreach (string dictionaryEntry in wordsChunk)
+            for(int chunkIndex = 0; chunkIndex < wordsChunk.Length; chunkIndex++)
             {
+                string dictionaryEntry = wordsChunk[chunkIndex];
                 // Check for exact match
                 String possiblePassword = dictionaryEntry;
                 crackedPasswords.AddRange(CheckSingleVariations(encryptedPasswords, possiblePassword));

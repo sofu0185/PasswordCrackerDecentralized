@@ -7,6 +7,8 @@ using static Common.ConsoleEnhancing;
 
 namespace Master
 {
+    using Common;
+    using Newtonsoft.Json;
     using System.IO;
     using System.Net.Sockets;
     using System.Runtime.Serialization.Formatters.Binary;
@@ -49,6 +51,10 @@ namespace Master
                     {
                         CommunicateWithClient(client, cancellationToken);
                     }
+                }
+                catch(Exception e)
+                {
+                    throw e;
                 }
                 // stops the stopwatch and closes the tcp client even if an exception is thrown
                 finally
@@ -102,21 +108,19 @@ namespace Master
                     throw e;
             }
 
-            // Checks if task has been canceled while waiting for a response from slave
-            cancellationToken.ThrowIfCancellationRequested();
-
             // If client responded with "passwd" then read the cracked passwords
             if (!string.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
             {
                 Console.Write("Minutes elapsed since start: ");
                 WriteLineWithColor($"{Stopwatch.Elapsed:%m\\:ss\\:ffff}", ConsoleColor.DarkGray);
 
-                int numberOfPassCracked = int.Parse(client.StreamReader.ReadLine());
-                for (int i = 0; i < numberOfPassCracked; i++)
-                {
-                    WriteLineWithColor($"\t{client.StreamReader.ReadLine()}", ConsoleColor.Yellow);
-                }
+                List<UserInfo> results = JsonConvert.DeserializeObject<List<UserInfo>>(client.StreamReader.ReadLine());
+                foreach (UserInfo u in results)
+                    WriteLineWithColor($"\t{u}", ConsoleColor.Yellow);
             }
+
+            // Checks if task has been canceled while waiting for a response from slave
+            cancellationToken.ThrowIfCancellationRequested();
         }
     }
 }
