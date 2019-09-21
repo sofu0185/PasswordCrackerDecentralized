@@ -4,11 +4,17 @@ using System.Text;
 
 namespace Master
 {
-    public static class Constants
+    /// <summary>
+    /// Contains program specific constants
+    /// </summary>
+    internal static class Constants
     {
-        public const int CHUNK_SIZE = 20_000;
-        public const int TCP_SERVER_PORT = 6789;
-        public const string DICTIONARY_PATH = "Text files/webster-dictionary.txt";
-        public const string PASSWORD_PATH = "Text files/passwords.txt";
+        /// <summary>
+        /// Represents the size of each word chunk being send to the client
+        /// </summary>
+        internal const int CHUNK_SIZE = 20_000 ;
+        internal const int TCP_SERVER_PORT = 6789;
+        internal const string DICTIONARY_PATH = "Text files/webster-dictionary.txt";
+        internal const string PASSWORD_PATH = "Text files/passwords.txt";
     }
 }

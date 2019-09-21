@@ -42,8 +42,7 @@ namespace Slave
 
                         usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine());
                         
-                        string allWords = sr.ReadLine();
-                        dicChunk = JsonConvert.DeserializeObject<List<string>>(allWords);
+                        dicChunk = JsonConvert.DeserializeObject<List<string>>(sr.ReadLine());
 
                     }
                     catch (IOException e)
@@ -51,7 +50,7 @@ namespace Slave
                         if (e.InnerException.GetType() != typeof(SocketException))
                             throw e;
                         else
-                            WriteLineWithColor($"\nMaster canceled all slaves due to an error!", ConsoleColor.Red);
+                            WriteLineWithColor($"\nMaster closed connection due to an error!", ConsoleColor.Red);
                     }
 
                     if (!string.IsNullOrWhiteSpace(chunkId))

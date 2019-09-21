@@ -7,8 +7,7 @@ namespace Master
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Starting server");
-            Server.StartServer();
+            Server.RunServer();
         }
     }
 }

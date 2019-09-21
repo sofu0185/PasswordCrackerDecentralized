@@ -13,15 +13,25 @@ namespace Master
 
     public static class Server
     {
+        /// <summary>
+        /// Contains all connected clients, key is the order clients connected to server.
+        /// </summary>
         private static Dictionary<int, Client> _clients;
+        /// <summary>
+        /// A list of all currently running communication tasks.
+        /// </summary>
         private static List<Task> _monitorTasks;
         private static Commander _commander;
         private static TcpListener _server;
 
-        static Server()
+        /// <summary>
+        /// Initialize server with core variables.
+        /// </summary>
+        private static void Start()
         {
+            Console.WriteLine("Starting server...");
             _clients = new Dictionary<int, Client>();
-            _monitorTasks = new List<Task>();            
+            _monitorTasks = new List<Task>();
             _commander = new Commander();
             _server = TcpListener.Create(Constants.TCP_SERVER_PORT);
 
@@ -29,15 +39,24 @@ namespace Master
             Console.WriteLine();
         }
 
-        public static void StartServer()
+        /// <summary>
+        /// Runs the cracking server. Craking starts when a least one client connects.
+        /// </summary>
+        public static void RunServer()
         {
-            // static constructor runs before this line
+            Start();
+
             CancellationTokenSource cts = new CancellationTokenSource();
             CancellationToken ct = cts.Token;
-            
+
+            // Wait for first client to connect
             TcpClient initialClient = _server.AcceptTcpClient();
             HandShake(initialClient, ref ct);
 
+            // Start stopwatch when client is fully connected
+            _commander.Stopwatch.Start();
+
+            // Wait for other clients in seperate thread
             Task.Run(() =>
             {
                 while (!_commander.EndOfChunks)
@@ -49,7 +68,7 @@ namespace Master
 
             // Cancel all other tasks if one fails
             string errorMessage = null;
-            while(_monitorTasks.Count > 0)
+            while (_monitorTasks.Count > 0)
             {
                 Task<Task> t = Task.WhenAny(_monitorTasks);
                 Task completedTask = t.Result;
@@ -66,19 +85,20 @@ namespace Master
             if (cts.IsCancellationRequested)
                 WriteLineWithColor($"\n{errorMessage}\n", ConsoleColor.Red);
 
-
             Console.WriteLine($"Total time: {_commander.Stopwatch.Elapsed}");
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Adds connected client to client dictionary and starts a communication task.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="cancellationToken"></param>
         private static void HandShake(TcpClient client, ref CancellationToken cancellationToken)
         {
             int clientId = _clients.Count;
-
             _clients.Add(clientId, new Client(client));
-
-            _commander.Stopwatch.Start();
-            _monitorTasks.Add(_commander.MonitorTaskMultiplePasswords(_clients[clientId], cancellationToken));
+            _monitorTasks.Add(_commander.SendAllChunksToClient(_clients[clientId], cancellationToken));
         }
     }
 }
