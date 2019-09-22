@@ -30,19 +30,24 @@ namespace Slave
                 StreamReader sr = new StreamReader(ns);
                 sw.AutoFlush = true;
 
+                // Read passwords and there hashed passwords once
+                List<UserInfo> usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine() ?? "");
+
+                // Convert all hashed passwords into byte arrays
+                List<(UserInfo, byte[])> usersAndHashedPassAsByteArray = new List<(UserInfo, byte[])>();
+                foreach (UserInfo userInfo in usersAndHashedPasswords)
+                {
+                    usersAndHashedPassAsByteArray.Add((userInfo, Convert.FromBase64String(userInfo.HashedPassword)));
+                }
+
                 while (clientSocket.Connected)
                 {
                     string chunkId = null;
-                    List<UserInfo> usersAndHashedPasswords = null;
                     string[] dicChunk = null;
                     try
                     {
                         chunkId = sr.ReadLine();
-
-                        usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine() ?? "");
-                        
                         dicChunk = JsonConvert.DeserializeObject<string[]>(sr.ReadLine() ?? "");
-
                     }
                     catch (IOException e)
                     {
@@ -50,7 +55,6 @@ namespace Slave
                             WriteLineWithColor($"\nMaster closed connection due to an error!", ConsoleColor.Red);
                         else
                             throw e;
-
                     }
 
                     if (!string.IsNullOrWhiteSpace(chunkId))
@@ -61,7 +65,7 @@ namespace Slave
                         WriteWithColor(chunkId, ConsoleColor.DarkGray);
                         Console.WriteLine("] and hashed password received and processed.");
 
-                        (bool isAnyCracked, List<UserInfo> crackedPasswords) crackingResult = CheckMultipleWordsAtOnce(subChunks, usersAndHashedPasswords);
+                        (bool isAnyCracked, List<UserInfo> crackedPasswords) crackingResult = CheckMultipleWordsAtOnce(subChunks, usersAndHashedPassAsByteArray);
 
                         Console.Write("Did any passwords match in chunk? ");
                         ConsoleColor color = crackingResult.isAnyCracked ? ConsoleColor.Green : ConsoleColor.Red;
@@ -112,7 +116,7 @@ namespace Slave
             return result;
         }
 
-        private static (bool, List<UserInfo>) CheckMultipleWordsAtOnce(List<string[]> subChunks, List<UserInfo> usersAndHashedPasswords)
+        private static (bool, List<UserInfo>) CheckMultipleWordsAtOnce(List<string[]> subChunks, List<(UserInfo, byte[])> usersAndHashedPasswords)
         {
             List<UserInfo> crackedUsers = new List<UserInfo>();
             Parallel.ForEach(subChunks, subChunk =>

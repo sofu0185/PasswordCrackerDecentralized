@@ -20,14 +20,15 @@ namespace Master
     /// </summary>
     public class Commander
     {
-        private Passwords _passwordHandler;
         private Chunks _chunkHandler;
-        public Stopwatch Stopwatch { get; set; }
+
+        public Passwords PasswordHandler { get; }
+        public Stopwatch Stopwatch { get; }
         public bool EndOfChunks { get => _chunkHandler.EndOfChunks; }
 
         public Commander()
         {
-            _passwordHandler = new Passwords();
+            PasswordHandler = new Passwords();
             _chunkHandler = new Chunks();
             Stopwatch = new Stopwatch();
         }
@@ -46,10 +47,13 @@ namespace Master
                 cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
+                    // Send list of users and there hashed passwords before looping over chunks
+                    client.StreamWriter.WriteLine(PasswordHandler.UsersAndPasswordsAsString);
+
                     // keeps sending chunks as long as there are more chunks to iterate over
                     while (!_chunkHandler.EndOfChunks)
                     {
-                        CommunicateWithClient(client, cancellationToken);
+                        CommunicateWithClient(client);
 
                         // Checks if task has been canceled since last chunk was send
                         cancellationToken.ThrowIfCancellationRequested();
@@ -73,10 +77,10 @@ namespace Master
         /// </summary>
         /// <param name="client"></param>
         /// <param name="cancellationToken"></param>
-        private void CommunicateWithClient(Client client, CancellationToken cancellationToken)
+        private void CommunicateWithClient(Client client)
         {
             WriteToClient(client);
-            ReadFromClient(client, cancellationToken);
+            ReadFromClient(client);
         }
 
         /// <summary>
@@ -86,7 +90,6 @@ namespace Master
         private void WriteToClient(Client client)
         {
             client.StreamWriter.WriteLine(_chunkHandler.CurrenntChunkIndex);
-            client.StreamWriter.WriteLine(_passwordHandler.UsersAndPasswordsAsString);
             client.StreamWriter.WriteLine(_chunkHandler.GetStringChunk());
         }
 
@@ -96,7 +99,7 @@ namespace Master
         /// <param name="client"></param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="OperationCanceledException"></exception>
-        private void ReadFromClient(Client client, CancellationToken cancellationToken)
+        private void ReadFromClient(Client client)
         {
             string slaveResponse;
             try
@@ -120,7 +123,7 @@ namespace Master
                 List<UserInfo> results = JsonConvert.DeserializeObject<List<UserInfo>>(client.StreamReader.ReadLine());
                 foreach (UserInfo u in results)
                 {
-                    _passwordHandler.SetPlainTextPassword(u.Id, u.PlainTextPassword);
+                    PasswordHandler.SetPlainTextPassword(u.Id, u.PlainTextPassword);
                     WriteLineWithColor($"\t{u}", ConsoleColor.Yellow);
                 }
             }
