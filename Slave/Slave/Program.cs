@@ -52,12 +52,15 @@ namespace Slave
                     catch (IOException e)
                     {
                         if (e.InnerException.GetType() == typeof(SocketException))
+                        {
                             WriteLineWithColor($"\nMaster closed connection due to an error!", ConsoleColor.Red);
+                            break;
+                        }
                         else
                             throw e;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(chunkId))
+                    if (clientSocket.Connected)
                     {
                         List<string[]> subChunks = SplitIntoSubchunks(dicChunk, LOGICALCORES);
 

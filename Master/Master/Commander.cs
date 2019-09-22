@@ -45,6 +45,9 @@ namespace Master
             {
                 // Checks to see if task has been canceled before starting.
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // Start stopwatch when server starts to send chunks to client
+                Stopwatch.Start();
                 try
                 {
                     // Send list of users and there hashed passwords before looping over chunks

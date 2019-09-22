@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Master
 {
+    using System.Collections.Concurrent;
     using System.IO;
     using System.Net.Sockets;
     using System.Threading;
@@ -47,43 +48,54 @@ namespace Master
             Start();
 
             CancellationTokenSource cts = new CancellationTokenSource();
-            CancellationToken ct = cts.Token;
-
-            // Wait for first client to connect
-            TcpClient initialClient = _server.AcceptTcpClient();
-            HandShake(initialClient, ref ct);
-
-            // Start stopwatch when client is fully connected
-            _commander.Stopwatch.Start();
 
             // Wait for other clients in seperate thread
-            Task.Run(() =>
+            Task runServerTask = Task.Run(() =>
             {
-                while (!_commander.EndOfChunks)
+                while (!_commander.EndOfChunks || cts.IsCancellationRequested)
                 {
                     TcpClient client = _server.AcceptTcpClient();
-                    Task.Run(() => HandShake(client, ref ct));
+                    Task.Run(() => HandShake(client, cts));
                 }
-            }, ct);
+            });
 
-            // Cancel all other tasks if one fails
-            string errorMessage = null;
-            Task.Factory.ContinueWhenAny(_monitorTasks.ToArray(), completedTask =>
+            // Wait
+            try
             {
-                if (completedTask.IsFaulted)
+                runServerTask.Wait(cts.Token);
+            }
+            catch(Exception e)
+            {
+                string errorMessage = e.Message;
+
+                // Wait for all task to be canceled
+                foreach (Task t in _monitorTasks)
                 {
-                    int eAmount = completedTask.Exception.InnerExceptions.Count;
-                    errorMessage = completedTask.Exception.InnerExceptions[eAmount - 1].Message;
-
-                    cts.Cancel();
+                    if (t.IsFaulted)
+                    {
+                        // Gets error message
+                        int eAmount = t.Exception.InnerExceptions.Count;
+                        errorMessage = t.Exception.InnerExceptions[eAmount - 1].Message;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (!t.IsCompleted)
+                                t.Wait();
+                        }
+                        catch (AggregateException oce)
+                        {
+                            if (!(oce.InnerException is TaskCanceledException))
+                                throw e;
+                        }
+                    }
                 }
-            }).Wait();
 
-            // Write error message when all tasks have been canceled
-            if (cts.IsCancellationRequested)
+                // Write error message when all tasks have been canceled
                 WriteLineWithColor($"\n{errorMessage}\n", ConsoleColor.Red);
-            else
-                Task.WaitAll(_monitorTasks.ToArray());
+            }
+
 
             Console.Write($"\nTotal time: ");
             WriteLineWithColor(_commander.Stopwatch.Elapsed, ConsoleColor.Yellow);
@@ -94,11 +106,17 @@ namespace Master
         /// </summary>
         /// <param name="client"></param>
         /// <param name="cancellationToken"></param>
-        private static void HandShake(TcpClient client, ref CancellationToken cancellationToken)
+        private static void HandShake(TcpClient client, CancellationTokenSource cts)
         {
             int clientId = _clients.Count;
             _clients.Add(clientId, new Client(client));
-            _monitorTasks.Add(_commander.SendAllChunksToClient(_clients[clientId], cancellationToken));
+
+            Task communicationTask = _commander.SendAllChunksToClient(_clients[clientId], cts.Token);
+
+            // If task fails due to an error cancel all other tasks 
+            communicationTask.ContinueWith(completedTask => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted);
+
+            _monitorTasks.Add(communicationTask);
         }
     }
 }
