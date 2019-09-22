@@ -16,13 +16,16 @@ namespace Slave
     class Program
     {
         public const int PORT = 6789;
-        public const string IPADDRESS = "localhost";
+        public static string IPADDRESS = "localhost";
         private static readonly int LOGICALCORES = Environment.ProcessorCount;
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Number Of Logical Processors: {0}", LOGICALCORES);
-            
+            // if there is one argument set it to ip address
+            if(args.Length > 0) IPADDRESS = args[0];
+
+            Console.WriteLine($"Number Of Logical Processors: {LOGICALCORES}");
+            Console.WriteLine($"Server located at: {IPADDRESS}:{PORT}");            
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
             using (NetworkStream ns = clientSocket.GetStream())
             {
@@ -31,7 +34,8 @@ namespace Slave
                 sw.AutoFlush = true;
 
                 // Read passwords and there hashed passwords once
-                List<UserInfo> usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(sr.ReadLine() ?? "");
+                string serializedUsers = sr.ReadLine();
+                List<UserInfo> usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(serializedUsers);
 
                 // Convert all hashed passwords into byte arrays
                 List<(UserInfo, byte[])> usersAndHashedPassAsByteArray = new List<(UserInfo, byte[])>();
@@ -42,6 +46,7 @@ namespace Slave
 
                 while (clientSocket.Connected)
                 {
+
                     string chunkId = null;
                     string[] dicChunk = null;
                     try
@@ -53,14 +58,14 @@ namespace Slave
                     {
                         if (e.InnerException.GetType() == typeof(SocketException))
                         {
-                            WriteLineWithColor($"\nMaster closed connection due to an error!", ConsoleColor.Red);
+                            WriteLineWithColor($"Master closed connection due to an error!\n", ConsoleColor.Red);
                             break;
                         }
                         else
                             throw e;
                     }
 
-                    if (clientSocket.Connected)
+                    if (chunkId != null)
                     {
                         List<string[]> subChunks = SplitIntoSubchunks(dicChunk, LOGICALCORES);
 
@@ -77,6 +82,12 @@ namespace Slave
                         ResponseToMaster(sw, crackingResult.isAnyCracked, crackingResult.crackedPasswords);
 
                         Console.WriteLine();
+                    }
+                    // if chunkId is null server has probably closed the connection
+                    else
+                    {
+                        WriteLineWithColor($"Program completed successfully\n", ConsoleColor.Blue);
+                        clientSocket.Close();
                     }
                 }
             }

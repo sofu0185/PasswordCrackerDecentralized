@@ -70,8 +70,9 @@ namespace Master
                 finally
                 {
                     Stopwatch.Stop();
-                    client.TcpClient.Close();
                 }
+                client.TcpClient.Close();
+
             }, cancellationToken);
         }
 

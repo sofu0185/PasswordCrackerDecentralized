@@ -54,8 +54,16 @@ namespace Master
             {
                 while (!_commander.EndOfChunks || cts.IsCancellationRequested)
                 {
-                    TcpClient client = _server.AcceptTcpClient();
-                    Task.Run(() => HandShake(client, cts));
+                    try
+                    {
+                        TcpClient client = _server.AcceptTcpClient();
+                        Task.Run(() => HandShake(client, cts));
+                    }
+                    catch(SocketException e)
+                    {
+                        if (e.ErrorCode != 10004)
+                            throw e;
+                    }
                 }
             });
 
@@ -93,7 +101,7 @@ namespace Master
                 }
 
                 // Write error message when all tasks have been canceled
-                WriteLineWithColor($"\n{errorMessage}\n", ConsoleColor.Red);
+                WriteLineWithColor($"\n{errorMessage}", ConsoleColor.Red);
             }
 
 
@@ -115,6 +123,12 @@ namespace Master
 
             // If task fails due to an error cancel all other tasks 
             communicationTask.ContinueWith(completedTask => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted);
+            communicationTask.ContinueWith(completedTask => 
+            {
+                Task.WhenAll(_monitorTasks).Wait();
+                _server.Stop();
+                
+            }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
             _monitorTasks.Add(communicationTask);
         }
