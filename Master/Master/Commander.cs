@@ -56,6 +56,7 @@ namespace Master
                     // keeps sending chunks as long as there are more chunks to iterate over
                     while (!_chunkHandler.EndOfChunks)
                     {
+                        // Send chunks to client and read response
                         CommunicateWithClient(client);
 
                         // Checks if task has been canceled since last chunk was send
@@ -71,6 +72,7 @@ namespace Master
                 {
                     Stopwatch.Stop();
                 }
+                client.NetworkStream.Close();
                 client.TcpClient.Close();
 
             }, cancellationToken);
@@ -105,6 +107,8 @@ namespace Master
         /// <exception cref="OperationCanceledException"></exception>
         private void ReadFromClient(Client client)
         {
+            // Try to read a command from client
+            // Command can be "passwd" or "Chunk"
             string slaveResponse;
             try
             {
@@ -112,6 +116,7 @@ namespace Master
             }
             catch (IOException e)
             {
+                // If client disconnected create new error message and throw it for error handling in server class
                 if (e.InnerException.GetType() == typeof(SocketException))
                     throw new Exception("!!! Slave disconnected !!!");
                 else
@@ -121,10 +126,14 @@ namespace Master
             // If client responded with "passwd" then read the cracked passwords
             if (!string.IsNullOrEmpty(slaveResponse) && slaveResponse == "passwd")
             {
+                // Print how much time has elapsed since the start
                 Console.Write("Minutes elapsed since start: ");
                 WriteLineWithColor($"{Stopwatch.Elapsed:%m\\:ss\\:ffff}", ConsoleColor.DarkGray);
-
+    
+                // Deserialize incomming passwords
                 List<UserInfo> results = JsonConvert.DeserializeObject<List<UserInfo>>(client.StreamReader.ReadLine());
+                
+                // Loop through the passwords and then print them
                 foreach (UserInfo u in results)
                 {
                     PasswordHandler.SetPlainTextPassword(u.Id, u.PlainTextPassword);

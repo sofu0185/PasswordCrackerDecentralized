@@ -49,39 +49,47 @@ namespace Master
 
             CancellationTokenSource cts = new CancellationTokenSource();
 
-            // Wait for other clients in seperate thread
+            // Run AccepTcpClient in another task for cancellation purposes
             Task runServerTask = Task.Run(() =>
             {
+                // Let new users connect as long as there are more chunks avalible
                 while (!_commander.EndOfChunks || cts.IsCancellationRequested)
                 {
                     try
                     {
+                        // Wait for TcpClient to connect
                         TcpClient client = _server.AcceptTcpClient();
+                        // Finish Connect in another thread
                         Task.Run(() => HandShake(client, cts));
                     }
                     catch(SocketException e)
                     {
-                        if (e.ErrorCode != 10004)
+                        // Dont throw exception if error code matches 10004
+                        if (e.ErrorCode == 10004) ;
+                        else
                             throw e;
                     }
                 }
             });
 
-            // Wait
+            // Waiting for the previous task
             try
             {
                 runServerTask.Wait(cts.Token);
             }
-            catch(Exception e)
+            // If a task was canceled find and wait for all other task to be canceled
+            // and then print message error for the error that caused the tasks to be canceled
+            catch (OperationCanceledException e)
             {
                 string errorMessage = e.Message;
 
-                // Wait for all task to be canceled
+                // Loop through all monitored tasks
                 foreach (Task t in _monitorTasks)
                 {
+                    // If task faulted due to an error get error message
                     if (t.IsFaulted)
                     {
-                        // Gets error message
+                        // Gets lowest error message in chain of aggregate exceptions
                         int eAmount = t.Exception.InnerExceptions.Count;
                         errorMessage = t.Exception.InnerExceptions[eAmount - 1].Message;
                     }
@@ -89,11 +97,13 @@ namespace Master
                     {
                         try
                         {
+                            // Try waiting for a non completed task
                             if (!t.IsCompleted)
                                 t.Wait();
                         }
                         catch (AggregateException oce)
                         {
+                            // Ignore error if task was cenceled
                             if (!(oce.InnerException is TaskCanceledException))
                                 throw e;
                         }
@@ -103,7 +113,12 @@ namespace Master
                 // Write error message when all tasks have been canceled
                 WriteLineWithColor($"\n{errorMessage}", ConsoleColor.Red);
             }
-
+            catch (Exception e)
+            {
+                string errorMessage = e.Message;
+                // Write error message when all tasks have been canceled
+                WriteLineWithColor($"\n{errorMessage}", ConsoleColor.Red);
+            }
 
             Console.Write($"\nTotal time: ");
             WriteLineWithColor(_commander.Stopwatch.Elapsed, ConsoleColor.Yellow);
@@ -116,13 +131,19 @@ namespace Master
         /// <param name="cancellationToken"></param>
         private static void HandShake(TcpClient client, CancellationTokenSource cts)
         {
+            // Get id for client
             int clientId = _clients.Count;
+            // Create add connected client to list of clients
             _clients.Add(clientId, new Client(client));
 
+            // Start sending chunks to the client in a new task
+            // Return a task for monitoring
             Task communicationTask = _commander.SendAllChunksToClient(_clients[clientId], cts.Token);
 
             // If task fails due to an error cancel all other tasks 
             communicationTask.ContinueWith(completedTask => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted);
+
+            // If task completed successfully wait for all other tasks to complete then close server/TcpListener
             communicationTask.ContinueWith(completedTask => 
             {
                 Task.WhenAll(_monitorTasks).Wait();
@@ -130,6 +151,7 @@ namespace Master
                 
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
+            // Add task to list
             _monitorTasks.Add(communicationTask);
         }
     }

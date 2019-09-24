@@ -24,9 +24,14 @@ namespace Slave
             // if there is one argument set it to ip address
             if(args.Length > 0) IPADDRESS = args[0];
 
-            Console.WriteLine($"Number Of Logical Processors: {LOGICALCORES}");
-            Console.WriteLine($"Server located at: {IPADDRESS}:{PORT}");            
+            Console.Write($"Number Of Logical Processors: ");
+            WriteLineWithColor($"{LOGICALCORES}", ConsoleColor.DarkGray);
+            Console.Write($"Server located at: ");
+            WriteLineWithColor($"{IPADDRESS}:{PORT}\n", ConsoleColor.DarkGray);
+
+            // Connecto to server/master
             TcpClient clientSocket = new TcpClient(IPADDRESS, PORT);
+
             using (NetworkStream ns = clientSocket.GetStream())
             {
                 StreamWriter sw = new StreamWriter(ns);
@@ -37,7 +42,7 @@ namespace Slave
                 string serializedUsers = sr.ReadLine();
                 List<UserInfo> usersAndHashedPasswords = JsonConvert.DeserializeObject<List<UserInfo>>(serializedUsers);
 
-                // Convert all hashed passwords into byte arrays
+                // Convert all hashed passwords into byte arrays for comparison
                 List<(UserInfo, byte[])> usersAndHashedPassAsByteArray = new List<(UserInfo, byte[])>();
                 foreach (UserInfo userInfo in usersAndHashedPasswords)
                 {
@@ -114,14 +119,26 @@ namespace Slave
 
         }
 
+        /// <summary>
+        /// Split a chunk of words into a certain number of sub chunks
+        /// </summary>
+        /// <param name="chunk">The list/chunk of words to be be split</param>
+        /// <param name="subchunkAmount">How many sub chunks there should be</param>
+        /// <returns></returns>
         private static List<string[]> SplitIntoSubchunks(Span<string> chunk, int subchunkAmount)
         {
             List<string[]> result = new List<string[]>();
 
+            // Get length of the sub chunks
             int subchunkLength = chunk.Length / subchunkAmount;
+
+            // Create the calculated amount of sub chunks
             for(int i = 0; i < subchunkAmount; i++)
             {
+                // Claculate where the sub chunk should start in the large chunk of words
                 int sliceStart = i * subchunkLength;
+
+                // If last sub chunk add all remaining words to it
                 if (i == subchunkAmount - 1)
                     result.Add(chunk.Slice(sliceStart).ToArray());
                 else
@@ -130,6 +147,12 @@ namespace Slave
             return result;
         }
 
+        /// <summary>
+        /// Check all sub chunks for matching passwords simultaneously on seprate threads
+        /// </summary>
+        /// <param name="subChunks"></param>
+        /// <param name="usersAndHashedPasswords"></param>
+        /// <returns></returns>
         private static (bool, List<UserInfo>) CheckMultipleWordsAtOnce(List<string[]> subChunks, List<(UserInfo, byte[])> usersAndHashedPasswords)
         {
             List<UserInfo> crackedUsers = new List<UserInfo>();

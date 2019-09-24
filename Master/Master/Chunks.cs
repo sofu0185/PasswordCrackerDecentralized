@@ -28,6 +28,7 @@ namespace Master
             // Read all words from file and split them into chunks
             _chunkArray = SplitIntoChunks(FileHandler.ReadAllWordsInDictionarySpan());
 
+            // Serialize each chunk so it doesn't need to happen when sending the chunks
             SerializedStringChunks = SerializeChunks();
 
 
@@ -59,6 +60,10 @@ namespace Master
             return result;
         }
 
+        /// <summary>
+        /// Serialize each chunk into json strings
+        /// </summary>
+        /// <returns></returns>
         private List<string> SerializeChunks()
         {
             List<string> result = new List<string>();
@@ -70,6 +75,10 @@ namespace Master
             return result;
         }
 
+        /// <summary>
+        /// Get a single chunk from the list of serialized chunks and increment the current chunk index with one
+        /// </summary>
+        /// <returns></returns>
         public string GetStringChunk()
         {
             int i = CurrenntChunkIndex;
