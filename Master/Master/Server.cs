@@ -79,7 +79,7 @@ namespace Master
             }
             // If a task was canceled find and wait for all other task to be canceled
             // and then print message error for the error that caused the tasks to be canceled
-            catch (OperationCanceledException e)
+            catch (Exception e)
             {
                 string errorMessage = e.Message;
 
@@ -110,12 +110,6 @@ namespace Master
                     }
                 }
 
-                // Write error message when all tasks have been canceled
-                WriteLineWithColor($"\n{errorMessage}", ConsoleColor.Red);
-            }
-            catch (Exception e)
-            {
-                string errorMessage = e.Message;
                 // Write error message when all tasks have been canceled
                 WriteLineWithColor($"\n{errorMessage}", ConsoleColor.Red);
             }
